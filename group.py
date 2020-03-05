@@ -1,9 +1,33 @@
+"""
+TODO:
+
+metacyclic group
+symmetric group
+false witnesses group
+compute orders (maybe store them) in O(n)
+isNormal
+isIsomorphic (check cardinals, cyclic, abelian, element orders, conjugacy classes,... first if already computed)
+isCyclic (compute orders first?) O(n)
+Sylow subgroups, normal subgroups, subgroups
+Aut(G), Inn(G), Out(G)
+conjugacy classes
+Z(G)
+stabilizer
+centralizer
+normalizer
+optimize Units()
+left/right cosets
+compute automorphism given the images of generators
+
+"""
+
 class Group:
     def __init__(self,n,e,op):
         self.element = e
         self.op = op
         self.card = n
-        self.abelian = False
+        self.abelian = None
+        self.cyclic = None
 
     def __len__(self):
         return self.card
@@ -14,6 +38,7 @@ class Group:
         op = lambda k1,k2: G.op(k1%len(G),k2%len(G))+H.op(k1//len(G),k2//len(G))*len(G)
         GH = Group(n,e,op)
         GH.abelian = G.abelian and H.abelian
+        GH.cyclic = G.cyclic and H.cyclic and gcd(len(G),len(H))==1
         return GH
 
     """
@@ -24,10 +49,36 @@ class Group:
         n = len(G)*len(H)
         e = lambda k: (G.element(k%len(G)),H.element(k//len(G)))
         op = lambda k1,k2: G.op(k1%len(G),f[k1//len(G)][k2%len(G)])+H.op(k1//len(G),k2//len(G))*len(G)
-        
 
+    """
+        Test if H is normal in G
+        H = list/set with indices of elements of G
+    """
+    def isNormal(G,H):
+        #TODO
+        return
+    
     def isAbelian(G):
-        return G._abelian
+        if G.abelian == None:
+            for i in range(len(G)):
+                for j in range(i,len(G)):
+                    if G.op(i,j) != G.op(j,i):
+                        G.abelian = False
+                        return False
+            G.abelian = True
+            return True
+        return G.abelian
+
+    def isCyclic(G):
+        if G.cyclic == None:
+            if not G.abelian:
+                G.cyclic = False
+                return False
+                #TODO
+            return False
+
+        return G.cyclic
+            
 
     def __mul__(G,H):
         return G.direct(H)
@@ -55,13 +106,15 @@ class Cyclic(Group):
         self.op = lambda g,h: (g+h)%n
         self.card = n
         self.abelian = True
+        self.cyclic = True
 
 class Dihedral(Group):
     def __init__(self,n):
         self.card = 2*n
         self.element = lambda k: k%self.card
         self.op = lambda g,h: (g+h)%n + h//n*n if g < n else (g-h)%n + (1-h//n)*n
-        self.abelian = False
+        self.abelian = n==1
+        self.cyclic = n==1
         
 class Units(Group):
     def __init__(self,n):
