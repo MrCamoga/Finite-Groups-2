@@ -55,8 +55,15 @@ class Group:
         H = list/set with indices of elements of G
     """
     def isNormal(G,H):
-        #TODO
-        return
+        for i in range(len(G)):
+            left = set()
+            right = set()
+            for h in H:
+                left.add(G.op(h,i))
+                right.add(G.op(i,h))
+            if left != right:
+                return False
+        return True
     
     def isAbelian(G):
         if G.abelian == None:
