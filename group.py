@@ -49,7 +49,18 @@ class Group:
         n = len(G)*len(H)
         e = lambda k: (G.element(k%len(G)),H.element(k//len(G)))
         op = lambda k1,k2: G.op(k1%len(G),f[k1//len(G)][k2%len(G)])+H.op(k1//len(G),k2//len(G))*len(G)
-
+        GH = Group(n,e,op)
+        if not (G.abelian and H.abelian):
+            GH.abelian = False
+        return GH
+        
+    def isSubgroup(G,H):
+        for h in H:
+            for k in H:
+                if G.op(h,k) not in H:
+                    return False
+        return True
+    
     """
         Test if H is normal in G
         H = list/set with indices of elements of G
@@ -86,10 +97,24 @@ class Group:
 
         return G.cyclic
             
-
+    def __iter__(G):
+        return GroupIter(G)
+    
     def __mul__(G,H):
         return G.direct(H)
 
+class GroupIter():
+    def __init__(self,G):
+        self.G = G
+        self.index = 0
+        
+    def __next__(self):
+        if self.index < len(self.G):
+            g = self.G.element(self.index)
+            self.index+=1
+            return g
+        raise StopIteration()
+        
 """
 truerepr        True prints element name
                 False prints element index
