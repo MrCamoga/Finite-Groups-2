@@ -5,19 +5,23 @@ metacyclic group
 symmetric group
 false witnesses group
 compute orders (maybe store them) in O(n)
-isNormal
-isIsomorphic (check cardinals, cyclic, abelian, element orders, conjugacy classes,... first if already computed)
+isNormal                                                                        ✓
+isIsomorphic (check cardinals, cyclic, abelian, element orders,
+    conjugacy classes,... first if already computed)
 isCyclic (compute orders first?) O(n)
 Sylow subgroups, normal subgroups, subgroups
 Aut(G), Inn(G), Out(G)
+conjugacy class                                                                 ✓
 conjugacy classes
-Z(G)
+Z(G)                                                                            ✓
 stabilizer
-centralizer
+centralizer                                                                     ✓
 normalizer
 optimize Units()
-left/right cosets
+left/right cosets                                                               ✓
+quotient group                                                                  ✓
 compute automorphism given the images of generators
+subset/subgroup class
 
 """
 
@@ -53,6 +57,55 @@ class Group:
         if not (G.abelian and H.abelian):
             GH.abelian = False
         return GH
+
+    def quotient(G,N):
+        assert(G.isNormal(N))
+        card = len(G)//len(N)
+        cosets = [N]
+        reprs = [0]
+        
+        for i in range(len(G)):
+            b = True
+            for s in cosets:
+                if i in s:
+                    b = False
+                    break
+            if b:
+                reprs.append(i)
+                cosets.append(G.leftcoset(N,i))
+
+
+        Q = Group(card, lambda k: cosets[k], lambda g,h: cosets.index(G.leftcoset(N,G.op(reprs[g],reprs[h]))))
+        
+        return Q
+        
+
+    def centralizer(G,s):
+        return {g for g in range(len(G)) if G.op(g,s)==G.op(s,g)}
+
+    def center(G):
+        return {g for g in range(len(G)) if all({G.op(g,s)==G.op(s,g) for s in range(len(G))})}
+    
+    def inverse(G,g):
+        p = g
+        while True:
+            tmp = G.op(p,g)
+            if tmp == 0:
+                return p
+            p = tmp
+        
+
+    def leftcoset(G,H,g):
+        return {G.op(g,h) for h in H}
+
+    def rightcoset(G,H,g):
+        return {G.op(h,g) for h in H}
+
+##    def conjugacyClasses(G):
+        
+
+    def conjugacyClass(G,x):
+        return {G.op(G.op(g,x),G.inverse(g)) for g in range(len(G))}
         
     def isSubgroup(G,H):
         for h in H:
@@ -159,6 +212,6 @@ class Units(Group):
 
 if __name__ == "__main__":
     A = Cyclic(3)
-    B = Cyclic(3)
+    B = Dihedral(4)
     C = A*B
-    cayleyTable(C)
+    cayleyTable(B)
