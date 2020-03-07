@@ -46,25 +46,25 @@ class Group:
         return self.card
 
     def direct(G,H):
-        n = len(G)*len(H)
-        index = lambda e: G.index(e[0])+H.index(e[1])*len(G)
-        e = lambda k: (G.element(k%len(G)),H.element(k//len(G)))
-        op = lambda k1,k2: index(G.op(k1%len(G),k2%len(G)),H.op(k1//len(G),k2//len(G)))
+        n = G.card*H.card
+        index = lambda e: G.index(e[0])+H.index(e[1])*G.card
+        e = lambda k: (G.element(k%G.card),H.element(k//G.card))
+        op = lambda k1,k2: index(G.op(k1%G.card,k2%G.card),H.op(k1//G.card,k2//G.card))
         GH = Group(n,e,op)
         GH.index = index
         GH.abelian = G.abelian and H.abelian
-        GH.cyclic = G.cyclic and H.cyclic and gcd(len(G),len(H))==1
+        GH.cyclic = G.cyclic and H.cyclic and gcd(G.card,H.card)==1
         return GH
 
     def direct2(*groups):
         if len(groups)==1:
             return groups[0]
-        n = reduce(lambda a,b: a*b,[len(G) for G in groups])
+        n = reduce(lambda a,b: a*b,[G.card for G in groups])
         def e(k):
             l = []
             for G in groups:
-                l.append(k%len(G))
-                k //= len(G)
+                l.append(k%G.card)
+                k //= G.card
             return tuple(l)
 
         def index(e):
@@ -72,7 +72,7 @@ class Group:
             f = 1
             for i in range(len(groups)):
                 k += e[i]*f
-                f *= len(groups[i])
+                f *= groups[i].card
             return k
 
         def op(g1,g2):
@@ -100,10 +100,10 @@ class Group:
         f: H -> Aut(G) hom.
     """
     def semidirect(G,H,f):
-        n = len(G)*len(H)
-        index = lambda e: G.index(e[0])+H.index(e[1])*len(G)
-        e = lambda k: (G.element(k%len(G)),H.element(k//len(G)))
-        op = lambda k1,k2: index((G.op(k1%len(G),f[k1//len(G)][k2%len(G)]),H.op(k1//len(G),k2//len(G))))
+        n = G.card*H.card
+        index = lambda e: G.index(e[0])+H.index(e[1])*G.card
+        e = lambda k: (G.element(k%G.card),H.element(k//G.card))
+        op = lambda k1,k2: index((G.op(k1%G.card,f[k1//G.card][k2%G.card]),H.op(k1//G.card,k2//G.card)))
         GH = Group(n,e,op)
         GH.index = index
         if not (G.abelian and H.abelian):
@@ -112,11 +112,11 @@ class Group:
 
     def quotient(G,N):
         assert(G.isNormal(N))
-        card = len(G)//len(N)
+        card = G.card//len(N)
         cosets = [N]
         reprs = [0]
         
-        for i in range(len(G)):
+        for i in range(G.card):
             b = True
             for s in cosets: # Check if i already in one coset
                 if i in s:
@@ -145,7 +145,7 @@ class Group:
         
     #TODO
     def automorphism(G, genimg):
-        bijection = [0]*len(G)
+        bijection = [0]*G.card
 
     """
         iso=0 subgroup of Aut(G)
@@ -154,7 +154,7 @@ class Group:
     def Inn(G, iso=0):
         Q = G.quotient(G.center())
         if iso==0:
-            elems = [[G.leftconjugate(g,x) for x in range(len(G))] for g in Q.reprs]
+            elems = [[G.leftconjugate(g,x) for x in range(G.card)] for g in Q.reprs]
             e = lambda k: elems[k]
             op = lambda g,h: elems.index(composition(e(h),e(g)))
             Inn = Group(len(elems),e,op)
@@ -164,18 +164,18 @@ class Group:
             
 
     def centralizer(G,s):
-        return {g for g in range(len(G)) if G.op(g,s)==G.op(s,g)}
+        return {g for g in range(G.card) if G.op(g,s)==G.op(s,g)}
 
     def normalizer(G,H):
-        return {g for g in range(len(G)) if G.leftcoset(H,g) == G.rightcoset(H,g)}
+        return {g for g in range(G.card) if G.leftcoset(H,g) == G.rightcoset(H,g)}
 
     def center(G):
         Z = {0}
-        for g in range(len(G)):
+        for g in range(G.card):
             if g in Z:
                 continue
             b = False
-            for s in range(len(G)):
+            for s in range(G.card):
                 if s in Z:
                     continue
                 if G.op(s,g) != G.op(g,s):
@@ -224,10 +224,10 @@ class Group:
         
 
     def conjugacyClass(G,x):
-        return {leftconjugate(g,x) for g in range(len(G))}
+        return {leftconjugate(g,x) for g in range(G.card)}
         
     def isSubgroup(G,H):
-        if len(G)%len(H) != 0:
+        if G.card%len(H) != 0:
             return False
         for h in H:
             for k in H:
@@ -241,7 +241,7 @@ class Group:
     """
     def isNormal(G,H):
         # if G.isSubgroup(H) and index==2: return True
-        for i in range(len(G)):
+        for i in range(G.card):
             left = set()
             right = set()
             for h in H: #optimize
@@ -257,7 +257,7 @@ class Group:
         for h in H:
             if h in S:
                continue
-            for g in range(len(G)):
+            for g in range(G.card):
                 if not leftconjugate(g,h) in H:
                     return False
             powers = [h]
@@ -274,7 +274,7 @@ class Group:
     def isAbelian(G):
         if G.abelian == None:
             S = {0}
-            for g in range(len(G)):
+            for g in range(G.card):
                 if g in S:
                     continue
                 for s in S:
@@ -320,7 +320,7 @@ class GroupIter():
         self.index = 0
         
     def __next__(self):
-        if self.index < len(self.G):
+        if self.index < self.G.card:
             g = self.G.element(self.index)
             self.index+=1
             return g
@@ -332,9 +332,9 @@ truerepr        True prints element name
 """
 def cayleyTable(G, truerepr=False):
     if truerepr:
-        T = [[G.element(G.op(j,i)) for i in range(len(G))]for j in range(len(G))]
+        T = [[G.element(G.op(j,i)) for i in range(G.card)]for j in range(G.card)]
     else:
-        T = [[G.op(j,i) for i in range(len(G))]for j in range(len(G))]
+        T = [[G.op(j,i) for i in range(G.card)]for j in range(G.card)]
     
     for i in T:
         s = ""
@@ -381,6 +381,7 @@ class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by ba
 class Symmetric(Group):
     def __init__(self,n):
         self.card = fact(n)
+        print(self.card)
         self.__n = n
         self.element = lambda k: self.__lehmer(k)
         self.index = lambda e: self.__lehmerinv(e)
@@ -403,7 +404,7 @@ class Symmetric(Group):
                 if p[j]>p[i]:
                     p[j] -= 1
 
-        f = len(G)//G.__n
+        f = G.card//G.__n
         n = 0
 
         for i in range(0,G.__n-1):
@@ -413,7 +414,7 @@ class Symmetric(Group):
         
     
     def __lehmer(G,k):
-        p = len(G)//G.__n
+        p = G.card//G.__n
         code = []
         for i in range(G.__n-1,0,-1):
             r = k//p
