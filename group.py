@@ -133,6 +133,18 @@ class Group:
         ##TODO isabelian, iscyclic
         return Q
 
+    def order(G,g):
+        if g == 0:
+            return 1
+        order = 1
+        p = g
+
+        while True:
+            p = G.op(p,g)
+            order+=1
+            if p==0:
+                return order
+
     def powers(G,g):
         if g==0:
             return [0]
@@ -443,6 +455,16 @@ class Symmetric(Group):
 class Units(Group):
     def __init__(self,n):
         e = [k for k in range(1,n) if gcd(k,n)==1]
+        d = {e[i]:i for i in range(len(e))}
+        self.element = lambda k: e[k]
+        self.index = lambda k: d[k]
+        self.card = len(e)
+        self.op = lambda g,h: self.index((e[g]*e[h])%n)
+        self.abelian = True
+
+class FalseWitness(Group):
+    def __init__(self,n):
+        e = [k for k in range(1,n) if pow(k,n-1,n)==1]
         d = {e[i]:i for i in range(len(e))}
         self.element = lambda k: e[k]
         self.index = lambda k: d[k]
