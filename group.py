@@ -167,9 +167,13 @@ class Group:
         return {g for g in range(G.card) if G.op(g,s)==G.op(s,g)}
 
     def normalizer(G,H):
+        if G.isAbelian():
+            return H
         return {g for g in range(G.card) if G.leftcoset(H,g) == G.rightcoset(H,g)}
 
     def center(G):
+        if G.abelian:
+            return {k for k in range(G.card)}
         Z = {0}
         for g in range(G.card):
             if g in Z:
@@ -252,6 +256,8 @@ class Group:
         return True
 
     def isNormal2(G,H): ## Faster?
+        if G.isAbelian() and G.isSubgroup(H):
+            return True
         S = {}
 
         for h in H:
@@ -378,21 +384,29 @@ class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by ba
         self.abelian = n==1
         self.cyclic = n==1
 
+class Alternating(Group):
+    def __init__(self,n):
+        self.card = fact(n)//2
+        self.__n = n
+
 class Symmetric(Group):
     def __init__(self,n):
         self.card = fact(n)
-        print(self.card)
         self.__n = n
-        self.element = lambda k: self.__lehmer(k)
-        self.index = lambda e: self.__lehmerinv(e)
+        self.element = self.__lehmer
+        self.index = self.__lehmerinv
         self.op = lambda g,h: self.index(self.__permcomp(self.__lehmer(g),self.__lehmer(h)))
         self.abelian = n <= 2
         self.cyclic = n <= 2
 
     def center(G):
+        if G.__n == 2:
+            return {0,1}
         return {0}
 
     def Inn(G):
+        if G.__n == 2:
+            return super().Inn()
         return G
     
     def __permcomp(G,g,h):
