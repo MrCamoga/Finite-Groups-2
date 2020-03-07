@@ -11,8 +11,10 @@ left/right cosets                                                               
 quotient group                                                                  ✓
 powers of an element                                                            ✓
 symmetric group                                                                 ✓
+normalizer                                                                      ✓
 
 metacyclic group
+alternating group
 false witnesses group
 compute orders (maybe store them) in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
@@ -22,10 +24,10 @@ Sylow subgroups, normal subgroups, subgroups
 Aut(G), Out(G)
 conjugacy classes
 stabilizer
-normalizer
 optimize Units()
 compute automorphism given the images of generators
 subset/subgroup class
+
 
 """
 
@@ -122,9 +124,35 @@ class Group:
     def centralizer(G,s):
         return {g for g in range(len(G)) if G.op(g,s)==G.op(s,g)}
 
+    def normalizer(G,H):
+        return {g for g in range(len(G)) if G.leftcoset(H,g) == G.rightcoset(H,g)}
+
     def center(G):
-        return {g for g in range(len(G)) if all({G.op(g,s)==G.op(s,g) for s in range(len(G))})}
-    
+        Z = {0}
+        for g in range(len(G)):
+            if g in Z:
+                continue
+            b = False
+            for s in range(len(G)):
+                if s in Z:
+                    continue
+                if G.op(s,g) != G.op(g,s):
+                    b = True
+                    break
+            if b:
+                continue
+            powers = [g]
+            while True:
+                t = G.op(g,powers[-1])
+                if t == 0 or t in S:
+                    break
+                powers.append(t)
+            for s in list(Z):
+                for x in powers:
+                    Z.add(G.op(x,s))
+                    
+        return Z
+
     def inverse(G,g):
         p = g
         while True:
@@ -328,6 +356,12 @@ class Symmetric(Group):
         self.op = lambda g,h: self.index(self.__permcomp(self.__lehmer(g),self.__lehmer(h)))
         self.abelian = n <= 2
         self.cyclic = n <= 2
+
+    def center(G):
+        return {0}
+
+    def Inn(G):
+        return G
     
     def __permcomp(G,g,h):
         return [g[k] for k in h]
@@ -370,6 +404,15 @@ class Units(Group):
         self.op = lambda g,h: self.index((e[g]*e[h])%n)
         self.abelian = True
 
+class Subset():
+    def __init__(self,G,H):
+        e = list(H)
+        self.element = lambda k: e[k]
+        self.card = len(H)
+        self.op = lambda g,h: G.op(self.element(g),self.element(h)) ## This returns an element of G that cannot be converted back to an element of H since we don't know of H is closed under the operation of G
+        self.subgroup = None
+
+    
 if __name__ == "__main__":
     A = Cyclic(3)
     B = Dihedral(4)
