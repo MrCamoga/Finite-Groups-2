@@ -332,6 +332,9 @@ class Group:
     def __mul__(G,H):
         return G.direct(H)
 
+    def __getitem__(G,i):
+        return G.element(i)
+    
 class GroupIter():
     def __init__(self,G):
         self.G = G
