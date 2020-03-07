@@ -1,6 +1,6 @@
 from math import gcd
 from math import factorial as fact
-
+from functools import reduce
 """
 TODO:
 
@@ -409,8 +409,8 @@ class Symmetric(Group):
         self.card = fact(n)
         self.__n = n
         self.element = self.__lehmer
-        self.index = self.__lehmerinv
-        self.op = lambda g,h: self.index(self.__permcomp(self.__lehmer(g),self.__lehmer(h)))
+        self.index = lambda e: self.__lehmerinv(e[:])
+        self.op = lambda g,h: self.__lehmerinv(self.__permcomp(self[g],self[h]))
         self.abelian = n <= 2
         self.cyclic = n <= 2
 
