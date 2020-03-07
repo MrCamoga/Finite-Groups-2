@@ -1,3 +1,6 @@
+from math import gcd
+from math import factorial as fact
+
 """
 TODO:
 
@@ -46,13 +49,52 @@ class Group:
         n = len(G)*len(H)
         index = lambda e: G.index(e[0])+H.index(e[1])*len(G)
         e = lambda k: (G.element(k%len(G)),H.element(k//len(G)))
-        op = lambda k1,k2: G.op(k1%len(G),k2%len(G))+H.op(k1//len(G),k2//len(G))*len(G)
+        op = lambda k1,k2: index(G.op(k1%len(G),k2%len(G)),H.op(k1//len(G),k2//len(G)))
         GH = Group(n,e,op)
         GH.index = index
         GH.abelian = G.abelian and H.abelian
         GH.cyclic = G.cyclic and H.cyclic and gcd(len(G),len(H))==1
         return GH
 
+    def direct2(*groups):
+        if len(groups)==1:
+            return groups[0]
+        n = reduce(lambda a,b: a*b,[len(G) for G in groups])
+        def e(k):
+            l = []
+            for G in groups:
+                l.append(k%len(G))
+                k //= len(G)
+            return tuple(l)
+
+        def index(e):
+            k = 0
+            f = 1
+            for i in range(len(groups)):
+                k += e[i]*f
+                f *= len(groups[i])
+            return k
+
+        def op(g1,g2):
+            t1 = e(g1)
+            t2 = e(g2)
+            
+            return index([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
+
+        def __coprimes():
+            for i in range(len(groups)):
+                for j in range(i+1,len(groups)):
+                    if gcd(i,j) != 1:
+                        return False
+            return True
+
+        K = Group(n,e,op)
+        K.index = index
+        K.abelian = all(G.abelian for G in groups)
+        K.cyclic = all(G.cyclic for G in groups) and __coprimes()
+
+        return K
+    
     """
         G,H groups
         f: H -> Aut(G) hom.
@@ -307,17 +349,6 @@ def composition(f,g):
 
 def toString(T):
     print(str(T).replace("], ", "]\n").replace("[[","[").replace("]]","]"))
-
-def gcd(a,b):
-    if b==0:
-        return a
-    return gcd(b,a%b)
-
-def fact(n):
-    p = 1
-    for i in range(1,n+1):
-        p *= i
-    return p
     
 class Cyclic(Group):
     def __init__(self,n):
@@ -372,7 +403,7 @@ class Symmetric(Group):
                 if p[j]>p[i]:
                     p[j] -= 1
 
-        f = G.card//G.__n
+        f = len(G)//G.__n
         n = 0
 
         for i in range(0,G.__n-1):
@@ -382,7 +413,7 @@ class Symmetric(Group):
         
     
     def __lehmer(G,k):
-        p = fact(G.__n-1)
+        p = len(G)//G.__n
         code = []
         for i in range(G.__n-1,0,-1):
             r = k//p
@@ -412,7 +443,6 @@ class Subset():
         self.op = lambda g,h: G.op(self.element(g),self.element(h)) ## This returns an element of G that cannot be converted back to an element of H since we don't know of H is closed under the operation of G
         self.subgroup = None
 
-    
 if __name__ == "__main__":
     A = Cyclic(3)
     B = Dihedral(4)
