@@ -10,9 +10,9 @@ centralizer                                                                     
 left/right cosets                                                               ✓
 quotient group                                                                  ✓
 powers of an element                                                            ✓
+symmetric group                                                                 ✓
 
 metacyclic group
-symmetric group
 false witnesses group
 compute orders (maybe store them) in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
@@ -157,6 +157,8 @@ class Group:
         return {leftconjugate(g,x) for g in range(len(G))}
         
     def isSubgroup(G,H):
+        if len(G)%len(H) != 0:
+            return False
         for h in H:
             for k in H:
                 if G.op(h,k) not in H:
@@ -177,6 +179,26 @@ class Group:
                 right.add(G.op(i,h))
             if left != right:
                 return False
+        return True
+
+    def isNormal2(G,H): ## Faster?
+        S = {}
+
+        for h in H:
+            if h in S:
+               continue
+            for g in range(len(G)):
+                if not leftconjugate(g,h) in H:
+                    return False
+            powers = [h]
+            while True:
+                t = G.op(h,powers[-1])
+                if t == 0 or t in S:
+                    break
+                powers.append(t)
+            for s in list(S):
+                for x in powers:
+                    S.add(G.op(x,s))
         return True
     
     def isAbelian(G):
@@ -262,6 +284,12 @@ def gcd(a,b):
     if b==0:
         return a
     return gcd(b,a%b)
+
+def fact(n):
+    p = 1
+    for i in range(1,n+1):
+        p *= i
+    return p
     
 class Cyclic(Group):
     def __init__(self,n):
@@ -290,7 +318,48 @@ class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by ba
         self.op = D.op
         self.abelian = n==1
         self.cyclic = n==1
+
+class Symmetric(Group):
+    def __init__(self,n):
+        self.card = fact(n)
+        self.__n = n
+        self.element = lambda k: self.__lehmer(k)
+        self.index = lambda e: self.__lehmerinv(e)
+        self.op = lambda g,h: self.index(self.__permcomp(self.__lehmer(g),self.__lehmer(h)))
+        self.abelian = n <= 2
+        self.cyclic = n <= 2
+    
+    def __permcomp(G,g,h):
+        return [g[k] for k in h]
+
+    def __lehmerinv(G,p):
+        for i in range(0,G.__n):
+            for j in range(i+1,G.__n):
+                if p[j]>p[i]:
+                    p[j] -= 1
+
+        f = G.card//G.__n
+        n = 0
+
+        for i in range(0,G.__n-1):
+            n += f*p[i]
+            f //= G.__n-1-i
+        return n
         
+    
+    def __lehmer(G,k):
+        p = fact(G.__n-1)
+        code = []
+        for i in range(G.__n-1,0,-1):
+            r = k//p
+            k = k%p
+            code.append(r)
+            p //= i
+
+        arr = [k for k in range(0,G.__n)]
+        return [arr.pop(i) for i in code]+[arr[0]]
+
+    
 class Units(Group):
     def __init__(self,n):
         e = [k for k in range(1,n) if gcd(k,n)==1]
