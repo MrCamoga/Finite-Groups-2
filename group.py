@@ -15,6 +15,7 @@ quotient group                                                                  
 powers of an element                                                            ✓
 symmetric group                                                                 ✓
 normalizer                                                                      ✓
+commutator [g,h] = g-1h-1gh                                                     ✓
 
 metacyclic group
 alternating group
@@ -60,26 +61,42 @@ class Group:
         if len(groups)==1:
             return groups[0]
         n = reduce(lambda a,b: a*b,[G.card for G in groups])
-        def e(k):
+        def e(k): #Recursive, returns tuple with elements in G[i]
+            l = []
+            for G in groups:
+                l.append(G.element(k%G.card))
+                k //= G.card
+            return tuple(l)
+
+        def eindex(k): # Non recursive, returns tuple with indices in G[i]
             l = []
             for G in groups:
                 l.append(k%G.card)
                 k //= G.card
             return tuple(l)
+        
+        def index(e): # Recursive, e = tuple with elements in G[i]
+            k = 0
+            f = 1
+            for i in range(len(groups)):
+                k += groups[i].index(e[i])*f
+                f *= groups[i].card
+            return k
 
-        def index(e):
+        def indexe(e): # Non recursive, e = tuple with indices in G[i]
             k = 0
             f = 1
             for i in range(len(groups)):
                 k += e[i]*f
                 f *= groups[i].card
             return k
+        
 
         def op(g1,g2):
-            t1 = e(g1)
-            t2 = e(g2)
+            t1 = eindex(g1)
+            t2 = eindex(g2)
             
-            return index([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
+            return indexe([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
 
         def __coprimes():
             for i in range(len(groups)):
@@ -174,7 +191,6 @@ class Group:
         if iso==1:
             return Q
             
-
     def centralizer(G,s):
         return {g for g in range(G.card) if G.op(g,s)==G.op(s,g)}
 
@@ -223,12 +239,15 @@ class Group:
         gxg-1
     """
     def leftconjugate(G,g,x):
-        return G.op(G.op(g,x),G.inverse(g))
+        return reduce(G.op, [g,x,G.inverse(g)])
     """
         g-1xg
     """
     def rightconjugate(G,g,x):
-        return G.op(G.op(G.inverse(g),x),g)
+        return reduce(G.op, [G.inverse(g),x,g])
+
+    def commutator(G,g,h):
+        return reduce(G.op,[G.inverse(g),G.inverse(h),g,h])
 
     def leftcoset(G,H,g):
         return {G.op(g,h) for h in H}
@@ -454,7 +473,6 @@ class Symmetric(Group):
         arr = [k for k in range(0,G.__n)]
         return [arr.pop(i) for i in code]+[arr[0]]
 
-    
 class Units(Group):
     def __init__(self,n):
         e = [k for k in range(1,n) if gcd(k,n)==1]
@@ -485,6 +503,7 @@ class Subset():
 
 if __name__ == "__main__":
     A = Cyclic(3)
-    B = Dihedral(4)
-    C = A*B
-    cayleyTable(B)
+##    B = Dihedral(4)
+##    C = A*B
+##    cayleyTable(B)
+    
