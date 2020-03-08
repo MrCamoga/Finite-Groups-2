@@ -1,6 +1,8 @@
 from math import gcd
 from math import factorial as fact
 from functools import reduce
+from sympy import isprime
+
 """
 TODO:
 
@@ -14,12 +16,12 @@ left/right cosets                                                               
 quotient group                                                                  ✓
 powers of an element                                                            ✓
 symmetric group                                                                 ✓
+alternating group                                                               ✓
 normalizer                                                                      ✓
 commutator [g,h] = g-1h-1gh                                                     ✓
+false witnesses group                                                           ✓
 
 metacyclic group
-alternating group
-false witnesses group
 compute orders (maybe store them) in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
@@ -247,7 +249,7 @@ class Group:
         return reduce(G.op, [G.inverse(g),x,g])
 
     def commutator(G,g,h):
-        return reduce(G.op,[G.inverse(g),G.inverse(h),g,h])
+        return reduce(G.op,[G.inverse(G.op(h,g)),g,h])
 
     def leftcoset(G,H,g):
         return {G.op(g,h) for h in H}
@@ -341,6 +343,11 @@ class Group:
             return False
 
         return G.cyclic
+
+    def isIsomorphic(G,H):
+        if G.card != H.card or not (G.isAbelian() ^ H.isAbelian()) or not (G.isCyclic() ^ H.isCyclic()):
+            return False
+        ##TODO
             
     def __iter__(G):
         return GroupIter(G)
@@ -384,7 +391,7 @@ def cayleyTable(G, truerepr=False):
 
 
 def composition(f,g):
-    return [g[f[x]] for x in range(len(f))]
+    return [g[x] for x in f]
     
 
 def toString(T):
@@ -398,6 +405,7 @@ class Cyclic(Group):
         self.card = n
         self.abelian = True
         self.cyclic = True
+        self.simple = isprime(n)
 
 class Dihedral(Group):
     def __init__(self,n):
@@ -407,6 +415,7 @@ class Dihedral(Group):
         self.op = lambda g,h: (g+h)%n + h//n*n if g < n else (g-h)%n + (1-h//n)*n
         self.abelian = n==1
         self.cyclic = n==1
+        self.simple = n==1
 
 class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
     def __init__(self,n):
@@ -417,11 +426,54 @@ class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by ba
         self.op = D.op
         self.abelian = n==1
         self.cyclic = n==1
+        self.simple = n==1
 
 class Alternating(Group):
     def __init__(self,n):
         self.card = fact(n)//2
         self.__n = n
+        self.element = self.__getperm
+        self.index = lambda e: self.__index(e[:])
+        self.op = lambda g,h: self.__index(composition(self[h],self[g]))
+        self.abelian = n <= 3
+        self.cyclic = n <= 3
+        self.simple = n >= 5
+        
+    def __getperm(G,k):
+        p = []
+        f = G.card//G.__n
+        arr = [i for i in range(G.__n)]
+
+        even = 0
+        
+        for i in range(G.__n-1,1,-1):
+            r = k//f
+            p.append(arr.pop(r))
+            even += r
+            k %= f
+            f //= i
+            
+        if even%2==0:
+            p += arr
+        else:
+            p += [arr[1],arr[0]]
+
+        return p
+
+    def __index(G,p):
+        for i in range(len(p)-2):
+            for j in range(i+1,len(p)-2):
+                if p[j]>p[i]:
+                    p[j] -= 1
+        
+        f = G.card//G.__n
+        n = 0
+
+        for i in range(len(p)-2):
+            n += f*p[i]
+            f //= G.__n-1-i
+        return n
+        
 
 class Symmetric(Group):
     def __init__(self,n):
@@ -429,9 +481,10 @@ class Symmetric(Group):
         self.__n = n
         self.element = self.__lehmer
         self.index = lambda e: self.__lehmerinv(e[:])
-        self.op = lambda g,h: self.__lehmerinv(self.__permcomp(self[g],self[h]))
+        self.op = lambda g,h: self.__lehmerinv(composition(self[h],self[g]))
         self.abelian = n <= 2
         self.cyclic = n <= 2
+        self.simple = n <= 2
 
     def center(G):
         if G.__n == 2:
@@ -443,11 +496,8 @@ class Symmetric(Group):
             return super().Inn()
         return G
     
-    def __permcomp(G,g,h):
-        return [g[k] for k in h]
-
     def __lehmerinv(G,p):
-        for i in range(0,G.__n):
+        for i in range(G.__n):
             for j in range(i+1,G.__n):
                 if p[j]>p[i]:
                     p[j] -= 1
@@ -470,7 +520,7 @@ class Symmetric(Group):
             code.append(r)
             p //= i
 
-        arr = [k for k in range(0,G.__n)]
+        arr = [k for k in range(G.__n)]
         return [arr.pop(i) for i in code]+[arr[0]]
 
 class Units(Group):
