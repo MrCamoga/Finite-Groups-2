@@ -147,7 +147,7 @@ class Group:
 
         index = lambda e: cosets.index(e)
 
-        Q = Group(card, lambda k: cosets[k], lambda g,h: index(G.leftcoset(N,G.op(reprs[g],reprs[h]))))
+        Q = Group(card, lambda k: {G.element(i) for i in cosets[k]}, lambda g,h: index(G.leftcoset(N,G.op(reprs[g],reprs[h]))))
         Q.reprs = reprs
         ##TODO isabelian, iscyclic
         return Q
