@@ -27,9 +27,11 @@ isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
 isCyclic (compute orders first?) O(n)
 Sylow subgroups, normal subgroups, subgroups
-Aut(G), Out(G)
+Aut(G) (as subgroup of Sn)
+Out(G)
+store set of generators
 conjugacy classes
-stabilizer
+stabilizer, orbits, group action
 optimize Units()
 compute automorphism given the images of generators
 subset/subgroup class
@@ -48,20 +50,12 @@ class Group:
     def __len__(self):
         return self.card
 
-    def direct(G,H):
-        n = G.card*H.card
-        index = lambda e: G.index(e[0])+H.index(e[1])*G.card
-        e = lambda k: (G.element(k%G.card),H.element(k//G.card))
-        op = lambda k1,k2: index(G.op(k1%G.card,k2%G.card),H.op(k1//G.card,k2//G.card))
-        GH = Group(n,e,op)
-        GH.index = index
-        GH.abelian = G.abelian and H.abelian
-        GH.cyclic = G.cyclic and H.cyclic and gcd(G.card,H.card)==1
-        return GH
-
-    def direct2(*groups):
+    def direct(*groups):
         if len(groups)==1:
-            return groups[0]
+            if isinstance(groups[0],Group):
+                return groups[0]
+            elif isinstance(groups[0],list):
+                groups = groups[0]
         n = reduce(lambda a,b: a*b,[G.card for G in groups])
         def e(k): #Recursive, returns tuple with elements in G[i]
             l = []
@@ -277,19 +271,9 @@ class Group:
         H = list/set with indices of elements of G
     """
     def isNormal(G,H):
-        # if G.isSubgroup(H) and index==2: return True
-        for i in range(G.card):
-            left = set()
-            right = set()
-            for h in H: #optimize
-                left.add(G.op(h,i))
-                right.add(G.op(i,h))
-            if left != right:
-                return False
-        return True
-
-    def isNormal2(G,H): ## Faster?
-        if G.isAbelian() and G.isSubgroup(H):
+        if not G.isSubgroup(H): # Unnecessary?
+            return False
+        elif G.card == 2*H.card or G.isAbelian():
             return True
         S = {}
 
@@ -336,11 +320,16 @@ class Group:
 
     def isCyclic(G):
         if G.cyclic == None:
-            if not G.abelian:
+            if isPrime(G.card):
+                G.cyclic = True
+                G.abelian = True
+                return True
+            if G.isAbelian():
+                print("todo")
+                
+            else:
                 G.cyclic = False
                 return False
-                #TODO
-            return False
 
         return G.cyclic
 
@@ -402,6 +391,7 @@ class Cyclic(Group):
         self.element = lambda k: k%n
         self.index = self.element
         self.op = lambda g,h: (g+h)%n
+        self.generators = {1}
         self.card = n
         self.abelian = True
         self.cyclic = True
@@ -413,6 +403,7 @@ class Dihedral(Group):
         self.element = lambda k: k%self.card
         self.index = self.element
         self.op = lambda g,h: (g+h)%n + h//n*n if g < n else (g-h)%n + (1-h//n)*n
+        self.generators = {1,n}
         self.abelian = n==1
         self.cyclic = n==1
         self.simple = n==1
@@ -420,7 +411,7 @@ class Dihedral(Group):
 class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
     def __init__(self,n):
         D = Cyclic(n).semidirect(Cyclic(2),[[k for k in range(n)],[(n-k)%n for k in range(n)]])
-        self.card = 2*n
+        self.card = D.card
         self.element = D.element
         self.index = D.index
         self.op = D.op
@@ -428,9 +419,24 @@ class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by ba
         self.cyclic = n==1
         self.simple = n==1
 
+"""
+    GL(n,k): (Z/kZ)^n
+"""
+class GL(Group):
+    def __init(self,n,k):
+        G = Group.direct([Cyclic(k)]*n).Aut()
+        assert(G.card == reduce(lambda a,b: a*b, [pow(k,n)-pow(k,i) for i in range(n)]))
+        self.card = G.card
+        self.element = G.element
+        self.index = G.index
+        self.op = G.op
+        self.abelian = n==1
+        self.cyclic = None
+        self.simple = None
+
 class Alternating(Group):
     def __init__(self,n):
-        self.card = fact(n)//2
+        self.card = (fact(n)+1)//2
         self.__n = n
         self.element = self.__getperm
         self.index = lambda e: self.__index(e[:])
@@ -482,6 +488,7 @@ class Symmetric(Group):
         self.element = self.__lehmer
         self.index = lambda e: self.__lehmerinv(e[:])
         self.op = lambda g,h: self.__lehmerinv(composition(self[h],self[g]))
+        self.generators = {self.__lehmerinv([k for k in range(n-2)]+[n-1,n-2]),self.__lehmerinv([k%n for k in range(1,n+1)])}
         self.abelian = n <= 2
         self.cyclic = n <= 2
         self.simple = n <= 2
