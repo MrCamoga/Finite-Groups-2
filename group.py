@@ -1,7 +1,7 @@
 from math import gcd
 from math import factorial as fact
 from functools import reduce
-from sympy import isprime
+from sympy import isprime, ntheory, lcm
 
 """
 TODO:
@@ -28,13 +28,20 @@ isIsomorphic (check cardinals, cyclic, abelian, element orders,
 isCyclic (compute orders first?) O(n)
 Sylow subgroups, normal subgroups, subgroups
 Aut(G) (as subgroup of Sn)
-Out(G)
+Out(G) = Aut(G)/Inn(G)
 store set of generators
 conjugacy classes
+
+character table
 stabilizer, orbits, group action
+
 optimize Units()
 compute automorphism given the images of generators
 subset/subgroup class
+
+SL, PSL, PGL
+simple groups
+sporadic groups
 
 
 """
@@ -50,6 +57,11 @@ class Group:
     def __len__(self):
         return self.card
 
+    """
+        two ways to call this method:
+            1st: Group.direct(G1,G2,...,Gn)
+            2nd: Group.direct([G1,G2,...,Gn])    i.e.   Group.direct([Cyclic(3)]*4)
+    """
     def direct(*groups):
         if len(groups)==1:
             if isinstance(groups[0],Group):
@@ -97,7 +109,7 @@ class Group:
         def __coprimes():
             for i in range(len(groups)):
                 for j in range(i+1,len(groups)):
-                    if gcd(i,j) != 1:
+                    if gcd(groups[i].card,groups[j].card) != 1:
                         return False
             return True
 
@@ -195,6 +207,60 @@ class Group:
             return H
         return {g for g in range(G.card) if G.leftcoset(H,g) == G.rightcoset(H,g)}
 
+    def orders(G):
+        o = {0:1}
+        elements = {g for g in range(G.card)}
+
+        while len(elements) > 0:
+            g = elements.pop()
+            powers = G.powers(g)
+            orderg = len(powers)
+            o[g] = orderg
+            
+            for i in range(len(powers)):
+                if powers[i] in o:
+                    continue
+                o[powers[i]] = orderg//gcd(i,orderg)
+                elements.remove(powers[i])
+
+##        h = dict()
+##        for k,v in o.items():
+##            h.setdefault(v,[]).append(k)
+##        return h
+        return [o[i] for i in range(len(G))]
+
+    def orders2(G):
+        o = {0:1}
+        elements = {g for g in range(1,G.card)}
+
+        while len(elements) > 0:
+            g = elements.pop()
+            p = g
+            powers = [g]
+            k = -1
+            while True:
+                t = G.op(p,g)
+                if t == 0:
+                    orderg = len(powers)+1
+                    o[g] = orderg
+                    for i in range(1,k):
+                        o[powers[i]] = orderg//gcd(i+1,orderg)
+                        elements.discard(powers[i])
+                    break
+                if t in o:
+                    if len(powers) == k+1:
+                        orderg = lcm(o[powers[-1]],o[t])
+                        o[g] = orderg
+                        for i in range(1,k):
+                            o[powers[i]] = orderg//gcd(i+1,orderg)
+                            elements.discard(powers[i])
+                        break
+                    else:
+                        k = len(powers)
+                p=t
+                powers.append(t)
+        return [o[i] for i in range(len(G))]
+
     def center(G):
         if G.abelian:
             return {k for k in range(G.card)}
@@ -222,6 +288,13 @@ class Group:
                     Z.add(G.op(x,s))
                     
         return Z
+
+    def pow(G,g,i): #Optimize
+##        factors = ntheory.factorint(n)
+        p = g;
+        for i in range(i-1):
+            p = G.op(p,g)
+        return p;
 
     def inverse(G,g):
         p = g
@@ -255,7 +328,7 @@ class Group:
         
 
     def conjugacyClass(G,x):
-        return {leftconjugate(g,x) for g in range(G.card)}
+        return {G.leftconjugate(g,x) for g in range(G.card)}
         
     def isSubgroup(G,H):
         if G.card%len(H) != 0:
@@ -273,15 +346,16 @@ class Group:
     def isNormal(G,H):
         if not G.isSubgroup(H): # Unnecessary?
             return False
-        elif G.card == 2*H.card or G.isAbelian():
+        if G.card == 2*len(H) or G.isAbelian():
             return True
+        
         S = {}
 
         for h in H:
             if h in S:
                continue
             for g in range(G.card):
-                if not leftconjugate(g,h) in H:
+                if not G.leftconjugate(g,h) in H:
                     return False
             powers = [h]
             while True:
@@ -397,6 +471,9 @@ class Cyclic(Group):
         self.cyclic = True
         self.simple = isprime(n)
 
+"""
+Dihedral group (symmetric of an n-gon)
+"""
 class Dihedral(Group):
     def __init__(self,n):
         self.card = 2*n
@@ -408,7 +485,10 @@ class Dihedral(Group):
         self.cyclic = n==1
         self.simple = n==1
 
-class Dihedral2(Group): # Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
+"""
+Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
+"""
+class Dihedral2(Group):
     def __init__(self,n):
         D = Cyclic(n).semidirect(Cyclic(2),[[k for k in range(n)],[(n-k)%n for k in range(n)]])
         self.card = D.card
@@ -434,6 +514,9 @@ class GL(Group):
         self.cyclic = None
         self.simple = None
 
+"""
+Alternating group on n letters
+"""
 class Alternating(Group):
     def __init__(self,n):
         self.card = (fact(n)+1)//2
@@ -480,7 +563,9 @@ class Alternating(Group):
             f //= G.__n-1-i
         return n
         
-
+"""
+Symmetric group on n letters
+"""
 class Symmetric(Group):
     def __init__(self,n):
         self.card = fact(n)
@@ -522,14 +607,18 @@ class Symmetric(Group):
         p = G.card//G.__n
         code = []
         for i in range(G.__n-1,0,-1):
-            r = k//p
+            code.append(k//p)
             k = k%p
-            code.append(r)
             p //= i
 
         arr = [k for k in range(G.__n)]
         return [arr.pop(i) for i in code]+[arr[0]]
 
+"""
+Multiplicative group of units modulo n
+
+This group stores all elements in a list, and so Units2 class is preferred for big groups
+"""
 class Units(Group):
     def __init__(self,n):
         e = [k for k in range(1,n) if gcd(k,n)==1]
@@ -540,6 +629,46 @@ class Units(Group):
         self.op = lambda g,h: self.index((e[g]*e[h])%n)
         self.abelian = True
 
+"""
+Multiplicative group of integers modulo n up to isomorphism
+"""
+class Units2(Group):
+    def __init__(self,n):
+        factors = ntheory.factorint(n)
+        l = list()
+
+        for k,v in factors.items():
+            if k==2:
+                if v==1:
+                    continue
+                elif v==2:
+                    l.append(2)
+                else:
+                    l += [2,2**(v-2)]
+            elif v==1:
+                l.append(k-1)
+            else:
+                l += [k-1,k**(v-1)]
+        l.sort()
+        groups = [Cyclic(i) for i in l]
+        print([G.card for G in groups])
+        G = Group.direct(groups)
+        self.element = G.element
+        self.index = G.index
+        self.card = G.card
+        self.op = G.op
+        self.abelian = G.abelian
+        self.cyclic = None
+        self.simple = None
+
+"""
+Subgroup of multiplicative group of integers mod n
+
+We know from FLT that for a p prime and x=1,...,p-1    x^(p-1) = 1 (mod p)
+If n is composite and x verifies that equality, we say that x is a false witness for n.
+
+The set of all false witnesses mod n is a subgroup.
+"""
 class FalseWitness(Group):
     def __init__(self,n):
         e = [k for k in range(1,n) if pow(k,n-1,n)==1]

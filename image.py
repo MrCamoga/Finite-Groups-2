@@ -6,7 +6,7 @@ from random import randint
 
 def saveImage(G,file):
     assert(G.card < 10000)
-    Tk()
+    window = Tk()
     img = PhotoImage(width=G.card,height=G.card)
     colors = list()
     if len(G) == 1:
@@ -23,13 +23,14 @@ def saveImage(G,file):
         img.put(" ".join([colors[G.op(j,i)] for j in range(len(G))]), [i,0])
 
     img.write("cayley tables/"+file+".png",format="png")
-
+    window.destroy()
+    
 def saveSubset(G,H,file):
     S = list(H)
     D = {S[i]:i for i in range(len(S))}
     
     assert(len(H) < 10000)
-    Tk()
+    window = Tk()
     img = PhotoImage(width=len(H),height=len(H))
     colors = list()
     if len(H) == 1:
@@ -46,3 +47,4 @@ def saveSubset(G,H,file):
         img.put(" ".join([colors[D[G.op(S[j],S[i])]] for j in range(len(S))]), [i,0])
         
     img.write("cayley tables/"+file+".png",format="png")
+    window.destroy()
