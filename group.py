@@ -24,8 +24,11 @@ false witnesses group                                                           
 conjugacy classes                                                               ✓
 Out(G) = Aut(G)/Inn(G)                                                          ✓
 fast inverse                                                                    ✓
+GL, PGL, PSL
+automorphism from generators
 
-metacyclic group
+
+metacyclic group, generalized quaternion
 compute orders (maybe store them) in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
@@ -41,9 +44,13 @@ optimize Units()
 compute automorphism given the images of generators
 subset/subgroup class
 
-SL, PSL, PGL
+SL
 simple groups
 sporadic groups
+
+Methods that don't work because they depend on methods that haven't been programmed yet:
+    depend on Aut(G):
+        Out(G), GL, PSL, PGL
 
 
 Duplicated methods/classes:
@@ -217,10 +224,27 @@ class Group:
             if t == 0:
                 return p
             p.append(t)
-        
-    #TODO
+
+    """
+        get automorphism defined by the images of the generators
+        genimg = {g:f(g) for g in gens}
+    """
     def automorphism(G, genimg):
         bijection = [0]*G.card
+
+        H = {0}
+
+        for g, f in genimg.items():
+            bijection[g] = f
+
+        while len(H) != G.card:
+            for g in genimg.keys():
+                for h in list(H):
+                    p = G.op(h,g)
+                    bijection[p] = G.op(bijection[h],bijection[g])
+                    H.add(p)
+                
+        return bijection
 
     """
         iso=0 subgroup of Aut(G)
@@ -388,25 +412,22 @@ class Group:
 
     def rightcoset(G,H,g):
         return {G.op(h,g) for h in H}
-
-##    def conjugacyClasses(G):
-        
-
+    
     def conjugacyClass(G,x):
         return {G.leftconjugate(g,x) for g in range(G.card)}
 
     def conjugacyClasses(G):
-        Cg = []
+        Cl = []
 
         for i in range(G.card):
             b = False
-            for C in Cg:
+            for C in Cl:
                 if i in C:
                     b = True
                     continue
             if not b:
-                Cg.append(G.conjugacyClass(i))
-        return Cg
+                Cl.append(G.conjugacyClass(i))
+        return Cl
         
     def isSubgroup(G,H):
         if G.card%len(H) != 0:
@@ -477,6 +498,7 @@ class Group:
                 G.abelian = True
                 return True
             if G.isAbelian():
+                print("todo")
                 ##TODO
                 
             else:
@@ -612,8 +634,45 @@ class PGL(Group):
         self.abelian = G.abelian
         self.cyclic = G.cyclic
         self.simple = G.simple
-        
 
+def GL32():
+    H = list()
+
+    C = Group.direct([Cyclic(2)]*3)
+    S = Symmetric(C.card)
+    count = 0
+    for i in range(1,2**3):
+        for j in range(1,2**3):
+            if j==i:
+                continue
+            for k in range(1,2**3):
+                if k==i or k==j or k==C.op(i,j):
+                    continue
+                count+=1
+##            print(i,j,k)
+                H.append(S.index(C.automorphism({1:i,2:j,4:k})))
+
+    return H,count
+        
+        
+class SL(Group):
+    def __init__(self,n,k):
+        GL = GL(n,k)
+        G = GL.quotient()   #TODO
+
+class PSL(Group):
+    def __init__(self,n,k):
+        SL = SL(n,k)
+        G = SL.quotient(SL.center())
+        
+        self.card = G.card
+        self.element = G.element
+        self.index = G.index
+        self.op = G.op
+        self.abelian = G.abelian
+        self.cyclic = G.cyclic
+        self.simple = n > 2 or (k!=2 and k!=3)
+        
 """
 Alternating group on n letters
 """
