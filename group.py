@@ -136,8 +136,6 @@ class Group:
             
             return indexe([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
 
-            return True
-
         def inverse(g):
             t = eindex(g)
             tinv = [groups[i].inverse(t[i]) for i in range(len(groups))]
@@ -164,9 +162,23 @@ class Group:
     def semidirect(G,H,f):
         n = G.card*H.card
         finv = [functioninverse(aut) for aut in f]
-        index = lambda e: G.index(e[0])+H.index(e[1])*G.card
-        e = lambda k: (G.element(k%G.card),H.element(k//G.card))
-        op = lambda k1,k2: index((G.op(k1%G.card,f[k1//G.card][k2%G.card]),H.op(k1//G.card,k2//G.card)))
+        def index(e): # Recursive
+            return G.index(e[0])+H.index(e[1])*G.card
+        
+        def e(k): # Recursive
+            return (G.element(k%G.card),H.element(k//G.card))
+
+        def indexe(e): # Non recursive
+            return e[0] + e[1]*G.card
+
+        def eindex(k): #Non recursive
+            return (k%G.card,k//G.card)
+
+        def op(g1,g2):
+            t1 = eindex(g1)
+            t2 = eindex(g2)
+            return indexe((G.op(t1[0],f[t1[1]][t2[0]]), H.op(t1[1],t2[1])))
+        
         GH = Group(n,e,op)
         GH.index = index
 
@@ -175,9 +187,10 @@ class Group:
             f[b][c] = a^-1   <=>   c = f^-1[b][a^-1]
         """
         def inverse(g):
-            t = e(g)
+            t = eindex(g)
             hinv = H.inverse(t[1])
             ginv = finv[t[1]][G.inverse(t[0])]
+            return indexe((ginv,hinv))
 
         """
             (g,h)^n = (g*f[h^1][g]*...*f[h^n][g],h^n) = (g', e) <=>  o(h) | n
@@ -192,7 +205,7 @@ class Group:
             order = len(powersh)*G.order(g)
         """
         def order(g):
-            t = e(g)
+            t = eindex(g)
             powersh = H.powers(t[1])
             g = reduce(lambda a,b: G.op(a,b),[f[h][t[0]] for h in powersh])
             return len(powersh)*G.order(g)
