@@ -18,8 +18,6 @@ def saveImage(G,file):
             colors.append(hexcol)
 
     for i in range(len(G)):
-        if i%10==0:
-            print(i)
         img.put(" ".join([colors[G.op(j,i)] for j in range(len(G))]), [i,0])
 
     img.write("cayley tables/"+file+".png",format="png")

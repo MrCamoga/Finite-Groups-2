@@ -2,7 +2,7 @@ from math import gcd
 from math import factorial as fact
 from functools import reduce
 from sympy import isprime, ntheory, lcm, mod_inverse
-from bisect import bisect
+from random import randrange
 
 """
 TODO:
@@ -24,18 +24,31 @@ false witnesses group                                                           
 conjugacy classes                                                               ✓
 Out(G) = Aut(G)/Inn(G)                                                          ✓
 fast inverse                                                                    ✓
-GL, PGL, PSL
-automorphism from generators
+GL, PGL, PSL                                                                    ✓
+automorphism from generators                                                    ✓
+generalized symmetric group                                                     ✓
 
 
+
+define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
+wreath product / central product
+change the semidirect product f from array of automorphisms to an actual function
+fast order for predefined groups
+Write permutations as disjoint cycles (enumerate partitions of n etc), this could be useful for conjugacy classes
+Change Symmetric.__lehmerinv and Alternating.__index from O(n^2) to O(n)
+Change methods that treat the 0 element as the identity
 metacyclic group, generalized quaternion
-compute orders (maybe store them) in O(n)
+compute orders in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
 isCyclic (compute orders first?) O(n)
 Sylow subgroups, normal subgroups, subgroups
+lattice of subgroups
 Aut(G) (as subgroup of Sn)
-store set of generators
+get set of generators
+composition series
+homomorphisms class
+quotient group: is abelian / is cyclic
 
 character table
 stabilizer, orbits, group action
@@ -48,9 +61,8 @@ SL
 simple groups
 sporadic groups
 
-Methods that don't work because they depend on methods that haven't been programmed yet:
-    depend on Aut(G):
-        Out(G), GL, PSL, PGL
+Methods that don't work yet:
+    Out(G), GL, PSL, PGL: they depend on Aut(G)
 
 
 Duplicated methods/classes:
@@ -84,6 +96,8 @@ class Group:
             if isinstance(groups[0],Group):
                 return groups[0]
             elif isinstance(groups[0],list):
+                if len(groups[0]) == 1:
+                    return groups[0][0]
                 groups = groups[0]
         n = reduce(lambda a,b: a*b,[G.card for G in groups])
         def e(k): #Recursive, returns tuple with elements in G[i]
@@ -115,7 +129,6 @@ class Group:
                 k += e[i]*f
                 f *= groups[i].card
             return k
-        
 
         def op(g1,g2):
             t1 = eindex(g1)
@@ -123,25 +136,23 @@ class Group:
             
             return indexe([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
 
-        def __coprimes():
-            for i in range(len(groups)):
-                for j in range(i+1,len(groups)):
-                    if gcd(groups[i].card,groups[j].card) != 1:
-                        return False
             return True
 
         def inverse(g):
             t = eindex(g)
             tinv = [groups[i].inverse(t[i]) for i in range(len(groups))]
             return indexe(tinv)
-            
+
+        def order(g):
+            t = eindex(g)
+            return lcm([groups[i].order(t[i]) for i in range(len(groups))])
 
         K = Group(n,e,op)
         K.index = index
+        K.order = order
         K.abelian = all(G.abelian for G in groups)
-        K.cyclic = all(G.cyclic for G in groups) and __coprimes()
+        K.cyclic = all(G.cyclic for G in groups) and lcm([G.card for G in groups]) == n
         K.inverse = inverse
-
 
         return K
     
@@ -159,12 +170,36 @@ class Group:
         GH = Group(n,e,op)
         GH.index = index
 
+        """
+            (a,b)*(c,d) = (a*f[b][c], b*d) = (e,e) <=> d = b^-1  &&  f[b][c] = a^-1
+            f[b][c] = a^-1   <=>   c = f^-1[b][a^-1]
+        """
         def inverse(g):
             t = e(g)
             hinv = H.inverse(t[1])
             ginv = finv[t[1]][G.inverse(t[0])]
 
+        """
+            (g,h)^n = (g*f[h^1][g]*...*f[h^n][g],h^n) = (g', e) <=>  o(h) | n
+            (g',e)^m = (g'*f[e^1][g']*...*f[e^m][g'],e) = (g'^m,e) = (e,e) <=> o(g') | m
+
+            o((g,h)) | m*n
+
+            o(h) = len(powersh)
+            g' = reduce(...)
+            o(g') = G.order(g)
+
+            order = len(powersh)*G.order(g)
+        """
+        def order(g):
+            t = e(g)
+            powersh = H.powers(t[1])
+            g = reduce(lambda a,b: G.op(a,b),[f[h][t[0]] for h in powersh])
+            return len(powersh)*G.order(g)
+            
+
         GH.inverse = inverse
+        GH.order = order
         
         if not (G.abelian and H.abelian):
             GH.abelian = False
@@ -189,8 +224,8 @@ class Group:
         index = lambda e: cosets.index(e)
 
         Q = Group(card, lambda k: {G.element(i) for i in cosets[k]}, lambda g,h: index(G.leftcoset(N,G.op(reprs[g],reprs[h]))))
+        Q.index = index
         Q.reprs = reprs
-        ##TODO isabelian, iscyclic
         return Q
 
     """
@@ -226,6 +261,19 @@ class Group:
             p.append(t)
 
     """
+        Returns identity element (this method has complexity O(1) for implemeted groups since they all have the identity as the 0th element)
+    """
+    def identity(G):
+        powers = set(G.powers(0))
+
+        while len(powers) != 1:
+            print(len(powers))
+            p = set(G.powers(randrange(G.card)))
+            powers = powers.intersection(p)
+
+        return powers.pop()
+
+    """
         get automorphism defined by the images of the generators
         genimg = {g:f(g) for g in gens}
     """
@@ -246,13 +294,15 @@ class Group:
                 
         return bijection
 
+    #TODO
     """
         iso=0 subgroup of Aut(G)
         iso=1 G/Z(G)
+        iso=2 subgroup of Symmetric group (the same as 0 but uses less memory)
     """
     def Inn(G, iso=0):
         Q = G.quotient(G.center())
-        if iso==0:
+        if iso&2==0:
             elems = [[G.leftconjugate(g,x) for x in range(G.card)] for g in Q.reprs]
             e = lambda k: elems[k]
             op = lambda g,h: elems.index(composition(e(h),e(g)))
@@ -260,12 +310,31 @@ class Group:
             return Inn
         if iso==1:
             return Q
+            
 
 ##    def Aut(G):
 ##        Aut.inverse = lambda f: Aut.index(functioninverse(f))
 
     def Out(G):
         return G.Aut().quotient(G.Inn())
+
+    
+    def Syl(G,p):
+        if not isprime(p):
+            return None
+        m = G.card
+        k = 0
+
+        while m%p==0:
+            m //= p
+            k += 1
+
+        order = {o for o in range(1,m+1,p) if m%o==0}
+        print(order)
+
+##        if k == 0:
+##            return None
+##        
             
     def centralizer(G,s):
         if G.isAbelian():
@@ -293,10 +362,32 @@ class Group:
 
     def normalizer(G,H):
         if G.isAbelian():
-            return H
+            return {g for g in range(G.card)}
         return {g for g in range(G.card) if G.leftcoset(H,g) == G.rightcoset(H,g)}
 
-    def orders(G):
+    def normalizer2(G,H):
+        if G.isAbelian():
+            return {g for g in range(G.card)}
+
+        N = set(H)
+
+        for g in range(len(G)):
+            if g in N:
+                continue
+            if G.leftcoset(H,g) == G.rightcoset(H,g):
+                powers = [g]
+                p = G.op(g,g)
+                while p not in N:
+                    powers.append(p)
+                    p = G.op(p,g)
+
+                for n in list(N):
+                    for m in powers:
+                        N.add(G.op(n,m))
+        return N
+            
+
+    def orders(G, Dict = False):
         o = {0:1}
         elements = {g for g in range(G.card)}
 
@@ -312,10 +403,11 @@ class Group:
                 o[powers[i]] = orderg//gcd(i,orderg)
                 elements.remove(powers[i])
 
-##        h = dict()
-##        for k,v in o.items():
-##            h.setdefault(v,[]).append(k)
-##        return h
+        if Dict:
+            h = dict()
+            for k,v in o.items():
+                h.setdefault(v,[]).append(k)
+            return h
         return [o[i] for i in range(len(G))]
 
     def orders2(G):
@@ -443,7 +535,7 @@ class Group:
         H = list/set with indices of elements of G
     """
     def isNormal(G,H):
-        if not G.isSubgroup(H): # Unnecessary?
+        if not G.isSubgroup(H):
             return False
         if G.card == 2*len(H) or G.isAbelian():
             return True
@@ -578,12 +670,15 @@ class Cyclic(Group):
         self.simple = isprime(n)
         self.inverse = lambda g: -g%n
 
+    def __repr__(G):
+        return "Cyclic("+str(G.card)+")"
 """
 Dihedral group (symmetric of an n-gon)
 """
 class Dihedral(Group):
     def __init__(self,n):
         self.card = 2*n
+        self.__n = n
         self.element = lambda k: k%self.card
         self.index = self.element
         self.op = lambda g,h: (g+h)%n + h//n*n if g < n else (g-h)%n + (1-h//n)*n
@@ -593,6 +688,10 @@ class Dihedral(Group):
         self.simple = n==1
         self.inverse = lambda g: -g%n if g < n else g
 
+    def __repr__(G):
+        return "Dihedral("+str(G.__n)+")"
+
+    
 """
 Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
 """
@@ -600,12 +699,17 @@ class Dihedral2(Group):
     def __init__(self,n):
         D = Cyclic(n).semidirect(Cyclic(2),[[k for k in range(n)],[(n-k)%n for k in range(n)]])
         self.card = D.card
+        
         self.element = D.element
         self.index = D.index
         self.op = D.op
         self.abelian = n==1
         self.cyclic = n==1
         self.simple = n==1
+        self.order = D.order
+
+    def __repr__(G):
+        return "Dihedral2("+str(G.card//2)+")"
 
 """
     GL(n,k): (Z/kZ)^n
@@ -615,6 +719,7 @@ class GL(Group):
         G = Group.direct([Cyclic(k)]*n).Aut()
         assert(G.card == reduce(lambda a,b: a*b, [pow(k,n)-pow(k,i) for i in range(n)]))
         self.card = G.card
+        self.__dim = (n,k)
         self.element = G.element
         self.index = G.index
         self.op = G.op
@@ -622,25 +727,30 @@ class GL(Group):
         self.cyclic = None
         self.simple = None
 
+    def __repr__(G):
+        return "GL"+repr(G.__dim)
+
 class PGL(Group):
     def __init__(self,n,k):
         GL = GL(n,k)
         G = GL.quotient(GL.center())
-
         self.card = G.card
+        self.__dim = (n,k)
         self.element = G.element
         self.index = G.index
         self.op = G.op
-        self.abelian = G.abelian
-        self.cyclic = G.cyclic
-        self.simple = G.simple
+##        self.abelian = G.abelian
+##        self.cyclic = G.cyclic
+##        self.simple = G.simple
 
+"""
+    GL(3,2) as subgroup of S9
+"""
 def GL32():
     H = list()
-
+    det = list()
     C = Group.direct([Cyclic(2)]*3)
     S = Symmetric(C.card)
-    count = 0
     for i in range(1,2**3):
         for j in range(1,2**3):
             if j==i:
@@ -648,11 +758,43 @@ def GL32():
             for k in range(1,2**3):
                 if k==i or k==j or k==C.op(i,j):
                     continue
-                count+=1
-##            print(i,j,k)
                 H.append(S.index(C.automorphism({1:i,2:j,4:k})))
+                v = [C[a] for a in [i,j,k]]
+                det.append((v[0][0]*v[1][1]*v[2][2] + v[0][1]*v[1][2]*v[2][0] + v[1][0]*v[2][1]*v[0][2] - v[2][0]*v[1][1]*v[0][2] - v[1][0]*v[0][1]*v[2][2] - v[2][1]*v[1][2]*v[0][0])%2)
 
-    return H,count
+    d = {H[i]:i for i in range(len(H))}
+
+    e = lambda k: S[H[k]]
+    index = lambda e: d[S.index(e)]
+    op = lambda g1,g2: d[S.op(H[g1],H[g2])]
+
+    GL = Group(len(H),e,op)
+
+    return GL
+        
+def GL23():
+    H = list()
+    det = list()
+    C = Group.direct([Cyclic(3)]*2)
+    S = Symmetric(C.card)
+    for i in range(1,3**2):
+        for j in range(1,3**2):
+            if j==i or j==C.op(i,i):
+                continue
+            H.append(S.index(C.automorphism({1:i,3:j})))
+            v = [C[a] for a in [i,j]]
+            det.append((v[0][0]*v[1][1]-v[1][0]*v[0][1])%3)
+
+    d = {H[i]:i for i in range(len(H))}
+
+    e = lambda k: S[H[k]]
+    index = lambda e: d[S.index(e)]
+    op = lambda g1,g2: d[S.op(H[g1],H[g2])]
+    
+
+    GL = Group(len(H),e,op)
+
+    return GL
         
         
 class SL(Group):
@@ -664,8 +806,8 @@ class PSL(Group):
     def __init__(self,n,k):
         SL = SL(n,k)
         G = SL.quotient(SL.center())
-        
         self.card = G.card
+        self.__dim = (n,k)
         self.element = G.element
         self.index = G.index
         self.op = G.op
@@ -687,6 +829,9 @@ class Alternating(Group):
         self.cyclic = n <= 3
         self.simple = n >= 5
         self.inverse = lambda k: self.__index(functioninverse(self.element(k)))
+
+    def __repr__(G):
+        return "Alternating("+str(G.__n)+")"
         
     def __getperm(G,k):
         p = []
@@ -733,11 +878,14 @@ class Symmetric(Group):
         self.element = self.__lehmer
         self.index = lambda e: self.__lehmerinv(e[:])
         self.op = lambda g,h: self.__lehmerinv(composition(self[h],self[g]))
-        self.generators = {self.__lehmerinv([k for k in range(n-2)]+[n-1,n-2]),self.__lehmerinv([k%n for k in range(1,n+1)])}
+##        self.generators = {self.__lehmerinv([k for k in range(n-2)]+[n-1,n-2]),self.__lehmerinv([k%n for k in range(1,n+1)])}
         self.abelian = n <= 2
         self.cyclic = n <= 2
         self.simple = n <= 2
         self.inverse = lambda k: self.__lehmerinv(functioninverse(self.element(k)))
+
+    def __repr__(G):
+        return "Symmetric("+str(G.__n)+")"
 
     def center(G):
         if G.__n == 2:
@@ -766,14 +914,16 @@ class Symmetric(Group):
     
     def __lehmer(G,k):
         p = G.card//G.__n
-        code = []
+        arr = [k for k in range(G.__n)]
+        perm = []
         for i in range(G.__n-1,0,-1):
-            code.append(k//p)
+            perm.append(arr.pop(k//p))
             k = k%p
             p //= i
 
-        arr = [k for k in range(G.__n)]
-        return [arr.pop(i) for i in code]+[arr[0]]
+        perm+=[arr[0]]
+
+        return perm
 
 """
 Multiplicative group of units modulo n
@@ -788,9 +938,13 @@ class Units(Group):
         self.index = lambda k: d[k]
 ##        self.index = lambda k: bisect(e,k)-1    slower (nlogn) but doesn't require inverse dictionary d
         self.card = len(e)
+        self.__n = n
         self.op = lambda g,h: self.index((e[g]*e[h])%n)
         self.abelian = True
         self.inverse = lambda g: self.index(mod_inverse(e[g],n))
+
+    def __repr__(G):
+        return "Units("+str(G.__n)+")"
 
 """
 Multiplicative group of integers modulo n up to isomorphism
@@ -819,15 +973,19 @@ class Units2(Group):
         self.element = G.element
         self.index = G.index
         self.card = G.card
+        self.__n = n
         self.op = G.op
         self.abelian = G.abelian
         self.cyclic = None
         self.simple = None
 
+    def __repr__(G):
+        return "Units2("+str(G.__n)+")"
+
 """
 Subgroup of multiplicative group of integers mod n
 
-We know from FLT that for a p prime and x=1,...,p-1    x^(p-1) = 1 (mod p)
+We know from FLT that for p prime and x=1,...,p-1    x^(p-1) = 1 (mod p)
 If n is composite and x verifies that equality, we say that x is a false witness for n.
 
 The set of all false witnesses mod n is a subgroup.
@@ -839,9 +997,32 @@ class FalseWitness(Group):
         self.element = lambda k: e[k]
         self.index = lambda k: d[k]
         self.card = len(e)
+        self.__n = n
         self.op = lambda g,h: self.index((e[g]*e[h])%n)
         self.abelian = True
         self.inverse = lambda k: self.index(mod_inverse(e[k],n))
+
+    def __repr__(G):
+        return "FalseWitness("+str(G.__n)+")"
+
+
+"""
+The generalized symmetric group is the wreath product Zm≀Sn = (Zm)^n⋊φSn
+with Sn acting on (Zm)^n by φ(σ)(a1,..., an) := (aσ(1),..., aσ(n))
+
+"""
+class GeneralizedSymmetric(Group):
+    def __init__(self,m,n):
+        S = Symmetric(n)
+        C = Group.direct([Cyclic(m)]*n)
+        
+        self.card = S.card*C.card
+        self.index = lambda e: C.index(e[0]) + S.index(e[1])*C.card
+        self.element = lambda k: (C[k%C.card], S[k//C.card])
+        self.op = lambda k1,k2: C.op(k1%C.card, C.index(composition(S[k1//C.card],C[k2%C.card]))) + S.op(k1//C.card, k2//C.card)*C.card
+        self.abelian = None
+        self.cyclic = None
+        
 
 class Subset():
     def __init__(self,G,H):
