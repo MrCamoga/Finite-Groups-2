@@ -3,6 +3,7 @@ from math import factorial as fact
 from functools import reduce
 from sympy import isprime, ntheory, lcm, mod_inverse
 from random import randrange
+from testraster import saveImage
 
 """
 TODO:
@@ -27,17 +28,18 @@ fast inverse                                                                    
 GL, PGL, PSL                                                                    ✓
 automorphism from generators                                                    ✓
 generalized symmetric group                                                     ✓
-
-
+generalized quaternion group                                                    ✓
+dicyclic group                                                                  ✓
+central product                                                                 ✓
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
-wreath product / central product
+wreath produc
 change the semidirect product f from array of automorphisms to an actual function
 fast order for predefined groups
 Write permutations as disjoint cycles (enumerate partitions of n etc), this could be useful for conjugacy classes
 Change Symmetric.__lehmerinv and Alternating.__index from O(n^2) to O(n)
 Change methods that treat the 0 element as the identity
-metacyclic group, generalized quaternion
+metacyclic group
 compute orders in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
@@ -147,6 +149,7 @@ class Group:
 
         K = Group(n,e,op)
         K.index = index
+        K.indexe = indexe
         K.order = order
         K.abelian = all(G.abelian for G in groups)
         K.cyclic = all(G.cyclic for G in groups) and lcm([G.card for G in groups]) == n
@@ -240,6 +243,24 @@ class Group:
         Q.index = index
         Q.reprs = reprs
         return Q
+
+    """
+        Central product of two groups A and B with C and D central subgroups of A and B respectively
+        is the quotient of AxB by the subgroup {(g,f-1(g)) : g∈A } and f : C -> D is an isomorphism
+        A and B are Groups
+        C and D are lists of subgroups
+        f is the isomorphism viewed as a permutation. Example: f = [0,3,2,1]
+    """
+    def centralproduct(A,B,C,D,f):
+        assert(set(C).issubset(A.center()))
+        assert(set(D).issubset(B.center()))
+        assert(len(C) == len(D) and len(C) == len(f))
+        #todo verify f is an isomorphism
+        
+        AB = A*B
+        Z = {AB.indexe((C[g],B.inverse(D[f[g]]))) for g in range(len(C))}
+
+        return AB/Z
 
     """
         HK
@@ -1035,8 +1056,25 @@ class GeneralizedSymmetric(Group):
         self.op = lambda k1,k2: C.op(k1%C.card, C.index(composition(S[k1//C.card],C[k2%C.card]))) + S.op(k1//C.card, k2//C.card)*C.card
         self.abelian = None
         self.cyclic = None
-        
 
+class GeneralizedQuaternion(Group):
+    def __init__(self,k):
+        self.card = 2**(k+1)
+        n = self.card//2
+        self.element = lambda k: k&(self.card-1)
+        self.index = self.element
+        self.op = lambda g,h: (g+h)%n + h//n*n if g < n else ( (g-h+n//2)%n if h >= n else (g-h)%n + n)
+        self.abelian = None
+
+class Dicyclic(Group):
+    def __init__(self,n):
+        self.card = 4*n
+        twon = 2*n
+        self.element = lambda k: k%self.card
+        self.index = self.element
+        self.op = lambda g,h: (g+h)%twon + h//twon*twon if g < twon else ( (g-h+n)%twon if h >= twon else (g-h)%twon + twon)
+        self.abelian = None
+        
 class Subset():
     def __init__(self,G,H):
         e = list(H)
@@ -1045,9 +1083,5 @@ class Subset():
         self.op = lambda g,h: G.op(self.element(g),self.element(h)) ## This returns an element of G that cannot be converted back to an element of H since we don't know of H is closed under the operation of G
         self.subgroup = None
 
-if __name__ == "__main__":
-    A = Cyclic(3)
-##    B = Dihedral(4)
-##    C = A*B
-##    cayleyTable(B)
+##if __name__ == "__main__":
     
