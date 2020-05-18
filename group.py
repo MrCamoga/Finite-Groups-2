@@ -31,10 +31,12 @@ generalized symmetric group                                                     
 generalized quaternion group                                                    ✓
 dicyclic group                                                                  ✓
 central product                                                                 ✓
+homomorphisms class                                                             ✓
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
 wreath produc
 change the semidirect product f from array of automorphisms to an actual function
+    define GeneralizedSymmetric group with Group.semidirect
 fast order for predefined groups
 Write permutations as disjoint cycles (enumerate partitions of n etc), this could be useful for conjugacy classes
 Change Symmetric.__lehmerinv and Alternating.__index from O(n^2) to O(n)
@@ -44,13 +46,13 @@ compute orders in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,... first if already computed)
 isCyclic (compute orders first?) O(n)
+isSimple
 Sylow subgroups, normal subgroups, subgroups
 lattice of subgroups
 Aut(G) (as subgroup of Sn)
 get set of generators
 composition series
-homomorphisms class
-quotient group: is abelian / is cyclic
+quotient group: is abelian / is cyclic / simple
 
 character table
 stabilizer, orbits, group action
@@ -157,12 +159,17 @@ class Group:
 
         return K
     
-    """
-        G⋊H
-        G,H groups
-        f: H -> Aut(G) hom.
-    """
     def semidirect(G,H,f):
+        """
+            G⋊H
+            G,H groups
+            f: H -> Aut(G) hom.
+
+            Example:
+            G = Cyclic(3)
+            H = Cyclic(4)
+            f = [[0,1,2], [0,2,1], [0,1,2], [0,2,1]]
+        """
         n = G.card*H.card
         finv = [functioninverse(aut) for aut in f]
         def index(e): # Recursive
@@ -244,14 +251,14 @@ class Group:
         Q.reprs = reprs
         return Q
 
-    """
-        Central product of two groups A and B with C and D central subgroups of A and B respectively
-        is the quotient of AxB by the subgroup {(g,f-1(g)) : g∈A } and f : C -> D is an isomorphism
-        A and B are Groups
-        C and D are lists of subgroups
-        f is the isomorphism viewed as a permutation. Example: f = [0,3,2,1]
-    """
     def centralproduct(A,B,C,D,f):
+        """
+            Central product of two groups A and B with C and D central subgroups of A and B respectively
+            is the quotient of AxB by the subgroup {(g,f-1(g)) : g∈A } and f : C -> D is an isomorphism
+            A and B are Groups
+            C and D are lists of subgroups
+            f is the isomorphism viewed as a permutation. Example: f = [0,3,2,1]
+        """
         assert(set(C).issubset(A.center()))
         assert(set(D).issubset(B.center()))
         assert(len(C) == len(D) and len(C) == len(f))
@@ -262,10 +269,10 @@ class Group:
 
         return AB/Z
 
-    """
-        HK
-    """
-    def multiply(G,H,K):
+    def multiply(G,H,K): 
+        """
+            HK = {h*k : h∈H, k∈K}
+        """
         HK = set()
         for h in H:
             for k in K:
@@ -285,6 +292,9 @@ class Group:
                 return order
 
     def powers(G,g):
+        """
+            <g> = {g^k : k∈N}
+        """
         if g==0:
             return [0]
         p = [0,g]
@@ -307,11 +317,11 @@ class Group:
 
         return powers.pop()
 
-    """
-        get automorphism defined by the images of the generators
-        genimg = {g:f(g) for g in gens}
-    """
     def automorphism(G, genimg):
+        """
+            Get automorphism defined by the images of the generators
+            genimg = {g:f(g) for g in gens}
+        """
         bijection = [0]*G.card
 
         H = {0}
@@ -329,12 +339,12 @@ class Group:
         return bijection
 
     #TODO
-    """
-        iso=0 subgroup of Aut(G)
-        iso=1 G/Z(G)
-        iso=2 subgroup of Symmetric group (the same as 0 but uses less memory)
-    """
     def Inn(G, iso=0):
+        """
+            iso=0 subgroup of Aut(G)
+            iso=1 G/Z(G)
+            iso=2 subgroup of Symmetric group (the same as 0 but uses less memory)
+        """
         Q = G.quotient(G.center())
         if iso&2==0:
             elems = [[G.leftconjugate(g,x) for x in range(G.card)] for g in Q.reprs]
@@ -350,6 +360,9 @@ class Group:
 ##        Aut.inverse = lambda f: Aut.index(functioninverse(f))
 
     def Out(G):
+        """
+            Aut(G)/Inn(G)
+        """
         return G.Aut().quotient(G.Inn())
 
     
@@ -364,13 +377,15 @@ class Group:
             k += 1
 
         order = {o for o in range(1,m+1,p) if m%o==0}
-        print(order)
 
 ##        if k == 0:
 ##            return None
 ##        
             
     def centralizer(G,s):
+        """
+            {g∈G : gs=sg ∀s∈G}
+        """
         if G.isAbelian():
             return {g for g in range(G.card)}
         
@@ -504,11 +519,16 @@ class Group:
                     
         return Z
 
-    def pow(G,g,i): #Optimize
-##        factors = ntheory.factorint(n)
-        p = g;
-        for i in range(i-1):
-            p = G.op(p,g)
+    def pow(G,g,i):
+        """
+            g^i
+        """
+        p = 0;
+        while i > 0:
+            if i&1:
+                p = G.op(p,g)
+            g = G.op(g,g)
+            i >>= 1
         return p;
 
     def inverse(G,g):
@@ -519,18 +539,22 @@ class Group:
                 return p
             p = tmp
 
-    """
-        gxg-1
-    """
     def leftconjugate(G,g,x):
+        """
+            gxg-1
+        """
         return reduce(G.op, [g,x,G.inverse(g)])
-    """
-        g-1xg
-    """
+    
     def rightconjugate(G,g,x):
+        """
+            g-1xg
+        """
         return reduce(G.op, [G.inverse(g),x,g])
 
     def commutator(G,g,h):
+        """
+            g-1h-1gh
+        """
         return reduce(G.op,[G.inverse(G.op(h,g)),g,h])
 
     def leftcoset(G,H,g):
@@ -564,11 +588,11 @@ class Group:
                     return False
         return True
     
-    """
-        Test if H is normal in G
-        H = list/set with indices of elements of G
-    """
     def isNormal(G,H):
+        """
+            Test if H is normal in G
+            H = list/set with indices of elements of G
+        """
         if not G.isSubgroup(H):
             return False
         if G.card == 2*len(H) or G.isAbelian():
@@ -594,6 +618,9 @@ class Group:
         return True
     
     def isAbelian(G):
+        """
+            Returns true if G is abelian
+        """
         if G.abelian == None:
             S = {0}
             for g in range(G.card):
@@ -633,8 +660,23 @@ class Group:
 
         return G.cyclic
 
+    def isSimple(G):
+        if G.simple != None:
+            return G.simple
+
+        if isprime(G.card):
+            G.simple = True
+            return True
+        elif G.card&1:
+            G.simple = False
+            return False
+
+        #TODO analize sylow subgroups
+
+        return None
+    
     def isIsomorphic(G,H):
-        if G.card != H.card or not (G.isAbelian() ^ H.isAbelian()) or not (G.isCyclic() ^ H.isCyclic()):
+        if G.card != H.card or(G.isAbelian() != H.isAbelian()) or (G.isCyclic() != H.isCyclic()):
             return False
         ##TODO
             
@@ -661,14 +703,14 @@ class GroupIter():
             self.index+=1
             return g
         raise StopIteration()
-        
-"""
-truerepr        True prints element name
-                False prints element index
-"""
+
 def cayleyTable(G, truerepr=False):
+    """
+    truerepr        True prints element name
+                    False prints element index
+    """
     if truerepr:
-        T = [[G.element(G.op(j,i)) for i in range(G.card)]for j in range(G.card)]
+        T = [[G[G.op(j,i)] for i in range(G.card)]for j in range(G.card)]
     else:
         T = [[G.op(j,i) for i in range(G.card)]for j in range(G.card)]
     
@@ -684,14 +726,9 @@ def functioninverse(f):
         g[f[i]] = i
     return g
 
-
 def composition(f,g):
     return [g[x] for x in f]
-    
-
-def toString(T):
-    print(str(T).replace("], ", "]\n").replace("[[","[").replace("]]","]"))
-    
+  
 class Cyclic(Group):
     def __init__(self,n):
         self.element = lambda k: k%n
@@ -706,10 +743,11 @@ class Cyclic(Group):
 
     def __repr__(G):
         return "Cyclic("+str(G.card)+")"
-"""
-Dihedral group (symmetric of an n-gon)
-"""
+    
 class Dihedral(Group):
+    """
+    Dihedral group: group of symmetries of an n-gon
+    """
     def __init__(self,n):
         self.card = 2*n
         self.__n = n
@@ -1082,6 +1120,80 @@ class Subset():
         self.card = len(H)
         self.op = lambda g,h: G.op(self.element(g),self.element(h)) ## This returns an element of G that cannot be converted back to an element of H since we don't know of H is closed under the operation of G
         self.subgroup = None
+        
+class Homomorphism():
+    def __init__(self,G,H,genimg):
+        self.__dom = G
+        self.__codom = H       
+        self.f = self.__createFunction(G,H,genimg)
+        self.genimg = genimg
+        self.__end = None
+        self.__iso = None
+        self.__inj = None
+        self.__sur = None
+
+    def __createFunction(self,G,H,genimg):
+        if not all(G.order(g)%H.order(h) == 0 for g,h in genimg.items()): #TODO
+            raise Exception("Function is not well defined")
+        f = [0]*G.card
+
+        S = {0}
+
+        for g, i in genimg.items():
+            f[g] = i
+
+        while len(S) != G.card:
+            for g in genimg.keys():
+                for s in list(S):
+                    p = G.op(s,g)
+                    f[p] = H.op(f[s],f[g])
+                    S.add(p)
+        return f
+
+    def isEndomorphism(f):
+        if f.__end != None:
+            return f.__end
+        f.__end = repr(f.codomain()) == repr(f.domain())
+        return f.__end
+ 
+    def isIsomorphism(f):
+        if f.__iso != None:
+            return f.__iso
+        f.__iso = len(f.codomain()) == len(f.domain()) and f.isInjective()
+        return f.__iso
+
+    def isAutomorphism(f):
+        return f.isEndomorphism() and f.isIsomorphism()
+
+    def isSurjective(f):
+        if f.__sur != None:
+            return f.__sur
+        if len(f.domain()) < len(f.codomain()):
+            f.__sur = False
+            return False
+        f.__sur = len(f.domain()) // len(f.kernel()) == len(f.codomain())
+        return f.__sur
+
+    def isInjective(f):
+        if f.__inj != None:
+            return f.__inj
+        if len(f.domain()) > len(f.codomain()):
+            f.__inj = False
+            return False
+        f.__inj = len(f.kernel()) == 1
+        return f.__inj
+    
+    def image(f):
+        return {f.f[g] for g in range(len(f.domain()))}
+
+    def kernel(f):
+        return {g for g in range(len(f.domain())) if f.f[g] == 0}
+
+    def domain(f):
+        return f.__dom
+
+    def codomain(f):
+        return f.__codom
 
 ##if __name__ == "__main__":
     
