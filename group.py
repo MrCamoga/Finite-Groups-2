@@ -32,6 +32,7 @@ generalized quaternion group                                                    
 dicyclic group                                                                  ✓
 central product                                                                 ✓
 homomorphisms class                                                             ✓
+subset/subgroup class                                                           ✓
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
 wreath produc
@@ -59,7 +60,6 @@ stabilizer, orbits, group action
 
 optimize Units()
 compute automorphism given the images of generators
-subset/subgroup class
 
 SL
 simple groups
@@ -982,7 +982,6 @@ class Symmetric(Group):
             n += f*p[i]
             f //= G.__n-1-i
         return n
-        
     
     def __lehmer(G,k):
         p = G.card//G.__n
@@ -1112,7 +1111,36 @@ class Dicyclic(Group):
         self.index = self.element
         self.op = lambda g,h: (g+h)%twon + h//twon*twon if g < twon else ( (g-h+n)%twon if h >= twon else (g-h)%twon + twon)
         self.abelian = None
+
+class Subgroup(Group):
+    def __init__(self,G,gen):
+        H = self.__genSubgroup(G,gen)
+        self.card = len(H)
+        d = {H[i]:i for i in range(len(H))}
+        self.element = lambda k: G[H[k]]
+        self.index = lambda e: d[G.index(e)]
+        self.op = lambda a,b: d[G.op(H[a],H[b])]
+        self.abelian = None
+        self.cyclic = None
+
+    def __genSubgroup(self,G,gen):
+        H = [0]
+        S = {0}
+        size = 1
+
+        while True:
+            for g in gen:
+                for h in H:
+                    p = G.op(h,g)
+                    if p not in S:
+                        H.append(p)
+                        S.add(p)
+            if size == len(H):
+                break
+            size = len(H)
+        return H
         
+    
 class Subset():
     def __init__(self,G,H):
         e = list(H)
@@ -1126,6 +1154,8 @@ class Homomorphism():
         self.__dom = G
         self.__codom = H       
         self.f = self.__createFunction(G,H,genimg)
+        if not G.isNormal(self.kernel()) or not H.isSubgroup(self.image()):
+            raise Exception("Function is not well defined")
         self.genimg = genimg
         self.__end = None
         self.__iso = None
@@ -1138,6 +1168,7 @@ class Homomorphism():
         f = [0]*G.card
 
         S = {0}
+        size = 1
 
         for g, i in genimg.items():
             f[g] = i
@@ -1148,6 +1179,9 @@ class Homomorphism():
                     p = G.op(s,g)
                     f[p] = H.op(f[s],f[g])
                     S.add(p)
+            if len(S) == size:
+                raise Exception("Set of generators do not generate the domain")
+            size = len(S)
         return f
 
     def isEndomorphism(f):
