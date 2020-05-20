@@ -518,6 +518,8 @@ class Group:
         return None
     
     def isIsomorphic(G,H):
+        if repr(G)==repr(H):
+            return True
         if G.card != H.card or(G.isAbelian() != H.isAbelian()) or (G.isCyclic() != H.isCyclic()):
             return False
         ##TODO
@@ -978,10 +980,25 @@ class Quotient(Group):
 
         self.index = lambda e: self.cosets.index(e)
         self.element = lambda k: {G.element(i) for i in self.cosets[k]}
-        self.op = lambda g,h: self.index(G.leftcoset(N,G.op(self.reprs[g],self.reprs[h])))
+        self.op = lambda g,h: self.getCosetIndex(G.op(self.reprs[g],self.reprs[h]))
+
+    def inverse(self,g):
+        return self.getCosetIndex(self.G.inverse(self.reprs[g]))
+
+    def getCosetIndex(self,g):
+        for i in range(len(self.cosets)):
+            if g in self.cosets[i]:
+                return i
+        return -1
+
+    def getCoset(self,g):
+        for coset in self.cosets:
+            if g in coset:
+                return coset
+        return None
 
     def __repr__(self):
-        return repr(self.G)+"/"+self.N
+        return repr(self.G)+"/"+repr(self.N)
 
 class Direct(Group):
     """
