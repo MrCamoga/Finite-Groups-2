@@ -35,7 +35,8 @@ homomorphisms class                                                             
 subset/subgroup class                                                           ✓
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
-wreath produc
+wreath product
+change Group.card into a function
 change the semidirect product f from array of automorphisms to an actual function
     define GeneralizedSymmetric group with Group.semidirect
 fast order for predefined groups
@@ -45,14 +46,16 @@ Change methods that treat the 0 element as the identity
 metacyclic group
 compute orders in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
-    conjugacy classes,... first if already computed)
+    conjugacy classes,...)
 isCyclic (compute orders first?) O(n)
 isSimple
 Sylow subgroups, normal subgroups, subgroups
+commutator subgroup
 lattice of subgroups
 Aut(G) (as subgroup of Sn)
 get set of generators
 composition series
+lower central series
 quotient group: is abelian / is cyclic / simple
 
 character table
@@ -89,167 +92,6 @@ class Group:
 
     def __len__(self):
         return self.card
-
-    """
-        two ways to call this method:
-            1st: Group.direct(G1,G2,...,Gn)
-            2nd: Group.direct([G1,G2,...,Gn])    i.e.   Group.direct([Cyclic(3)]*4)
-    """
-    def direct(*groups):
-        if len(groups)==1:
-            if isinstance(groups[0],Group):
-                return groups[0]
-            elif isinstance(groups[0],list):
-                if len(groups[0]) == 1:
-                    return groups[0][0]
-                groups = groups[0]
-        n = reduce(lambda a,b: a*b,[G.card for G in groups])
-        def e(k): #Recursive, returns tuple with elements in G[i]
-            l = []
-            for G in groups:
-                l.append(G.element(k%G.card))
-                k //= G.card
-            return tuple(l)
-
-        def eindex(k): # Non recursive, returns tuple with indices in G[i]
-            l = []
-            for G in groups:
-                l.append(k%G.card)
-                k //= G.card
-            return tuple(l)
-        
-        def index(e): # Recursive, e = tuple with elements in G[i]
-            k = 0
-            f = 1
-            for i in range(len(groups)):
-                k += groups[i].index(e[i])*f
-                f *= groups[i].card
-            return k
-
-        def indexe(e): # Non recursive, e = tuple with indices in G[i]
-            k = 0
-            f = 1
-            for i in range(len(groups)):
-                k += e[i]*f
-                f *= groups[i].card
-            return k
-
-        def op(g1,g2):
-            t1 = eindex(g1)
-            t2 = eindex(g2)
-            
-            return indexe([groups[i].op(t1[i],t2[i]) for i in range(len(groups))])
-
-        def inverse(g):
-            t = eindex(g)
-            tinv = [groups[i].inverse(t[i]) for i in range(len(groups))]
-            return indexe(tinv)
-
-        def order(g):
-            t = eindex(g)
-            return lcm([groups[i].order(t[i]) for i in range(len(groups))])
-
-        K = Group(n,e,op)
-        K.index = index
-        K.indexe = indexe
-        K.order = order
-        K.abelian = all(G.abelian for G in groups)
-        K.cyclic = all(G.cyclic for G in groups) and lcm([G.card for G in groups]) == n
-        K.inverse = inverse
-
-        return K
-    
-    def semidirect(G,H,f):
-        """
-            G⋊H
-            G,H groups
-            f: H -> Aut(G) hom.
-
-            Example:
-            G = Cyclic(3)
-            H = Cyclic(4)
-            f = [[0,1,2], [0,2,1], [0,1,2], [0,2,1]]
-        """
-        n = G.card*H.card
-        finv = [functioninverse(aut) for aut in f]
-        def index(e): # Recursive
-            return G.index(e[0])+H.index(e[1])*G.card
-        
-        def e(k): # Recursive
-            return (G.element(k%G.card),H.element(k//G.card))
-
-        def indexe(e): # Non recursive
-            return e[0] + e[1]*G.card
-
-        def eindex(k): #Non recursive
-            return (k%G.card,k//G.card)
-
-        def op(g1,g2):
-            t1 = eindex(g1)
-            t2 = eindex(g2)
-            return indexe((G.op(t1[0],f[t1[1]][t2[0]]), H.op(t1[1],t2[1])))
-        
-        GH = Group(n,e,op)
-        GH.index = index
-
-        """
-            (a,b)*(c,d) = (a*f[b][c], b*d) = (e,e) <=> d = b^-1  &&  f[b][c] = a^-1
-            f[b][c] = a^-1   <=>   c = f^-1[b][a^-1]
-        """
-        def inverse(g):
-            t = eindex(g)
-            hinv = H.inverse(t[1])
-            ginv = finv[t[1]][G.inverse(t[0])]
-            return indexe((ginv,hinv))
-
-        """
-            (g,h)^n = (g*f[h^1][g]*...*f[h^n][g],h^n) = (g', e) <=>  o(h) | n
-            (g',e)^m = (g'*f[e^1][g']*...*f[e^m][g'],e) = (g'^m,e) = (e,e) <=> o(g') | m
-
-            o((g,h)) | m*n
-
-            o(h) = len(powersh)
-            g' = reduce(...)
-            o(g') = G.order(g)
-
-            order = len(powersh)*G.order(g)
-        """
-        def order(g):
-            t = eindex(g)
-            powersh = H.powers(t[1])
-            g = reduce(lambda a,b: G.op(a,b),[f[h][t[0]] for h in powersh])
-            return len(powersh)*G.order(g)
-            
-
-        GH.inverse = inverse
-        GH.order = order
-        
-        if not (G.abelian and H.abelian):
-            GH.abelian = False
-        return GH
-
-    def quotient(G,N):
-        assert(G.isNormal(N))
-        card = G.card//len(N)
-        cosets = [N]
-        reprs = [0]
-        
-        for i in range(G.card):
-            b = True
-            for s in cosets:
-                if i in s:
-                    b = False
-                    break
-            if b:
-                reprs.append(i)
-                cosets.append(G.leftcoset(N,i))
-
-        index = lambda e: cosets.index(e)
-
-        Q = Group(card, lambda k: {G.element(i) for i in cosets[k]}, lambda g,h: index(G.leftcoset(N,G.op(reprs[g],reprs[h]))))
-        Q.index = index
-        Q.reprs = reprs
-        return Q
 
     def centralproduct(A,B,C,D,f):
         """
@@ -345,7 +187,7 @@ class Group:
             iso=1 G/Z(G)
             iso=2 subgroup of Symmetric group (the same as 0 but uses less memory)
         """
-        Q = G.quotient(G.center())
+        Q = Quotient(G,G.center())
         if iso&2==0:
             elems = [[G.leftconjugate(g,x) for x in range(G.card)] for g in Q.reprs]
             e = lambda k: elems[k]
@@ -363,7 +205,7 @@ class Group:
         """
             Aut(G)/Inn(G)
         """
-        return G.Aut().quotient(G.Inn())
+        return Quotient(G.Aut(),G.Inn())
 
     
     def Syl(G,p):
@@ -684,13 +526,16 @@ class Group:
         return GroupIter(G)
 
     def __truediv__(G,N):
-        return G.quotient(N)
+        return Quotient(G,N)
     
     def __mul__(G,H):
-        return G.direct(H)
+        return Direct(G,H)
 
     def __getitem__(G,i):
         return G.element(i)
+
+    def __eq__(G,H):
+        return G.isIsomorphic(H)
     
 class GroupIter():
     def __init__(self,G):
@@ -769,7 +614,7 @@ Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
 """
 class Dihedral2(Group):
     def __init__(self,n):
-        D = Cyclic(n).semidirect(Cyclic(2),[[k for k in range(n)],[(n-k)%n for k in range(n)]])
+        D = Semidirect(Cyclic(n),Cyclic(2),[[k for k in range(n)],[(n-k)%n for k in range(n)]])
         self.card = D.card
         
         self.element = D.element
@@ -788,7 +633,7 @@ class Dihedral2(Group):
 """
 class GL(Group):
     def __init(self,n,k):
-        G = Group.direct([Cyclic(k)]*n).Aut()
+        G = Direct([Cyclic(k)]*n).Aut()
         assert(G.card == reduce(lambda a,b: a*b, [pow(k,n)-pow(k,i) for i in range(n)]))
         self.card = G.card
         self.__dim = (n,k)
@@ -805,7 +650,7 @@ class GL(Group):
 class PGL(Group):
     def __init__(self,n,k):
         GL = GL(n,k)
-        G = GL.quotient(GL.center())
+        G = GL.Inn(iso=1)
         self.card = G.card
         self.__dim = (n,k)
         self.element = G.element
@@ -821,7 +666,7 @@ class PGL(Group):
 def GL32():
     H = list()
     det = list()
-    C = Group.direct([Cyclic(2)]*3)
+    C = Direct([Cyclic(2)]*3)
     S = Symmetric(C.card)
     for i in range(1,2**3):
         for j in range(1,2**3):
@@ -847,7 +692,7 @@ def GL32():
 def GL23():
     H = list()
     det = list()
-    C = Group.direct([Cyclic(3)]*2)
+    C = Direct([Cyclic(3)]*2)
     S = Symmetric(C.card)
     for i in range(1,3**2):
         for j in range(1,3**2):
@@ -872,12 +717,12 @@ def GL23():
 class SL(Group):
     def __init__(self,n,k):
         GL = GL(n,k)
-        G = GL.quotient()   #TODO
+        G = Quotient(GL)   #TODO
 
 class PSL(Group):
     def __init__(self,n,k):
         SL = SL(n,k)
-        G = SL.quotient(SL.center())
+        G = SL.Inn(iso=1)
         self.card = G.card
         self.__dim = (n,k)
         self.element = G.element
@@ -1040,7 +885,7 @@ class Units2(Group):
         l.sort()
         groups = [Cyclic(i) for i in l]
         print([G.card for G in groups])
-        G = Group.direct(groups)
+        G = Direct(groups)
         self.element = G.element
         self.index = G.index
         self.card = G.card
@@ -1085,7 +930,7 @@ with Sn acting on (Zm)^n by φ(σ)(a1,..., an) := (aσ(1),..., aσ(n))
 class GeneralizedSymmetric(Group):
     def __init__(self,m,n):
         S = Symmetric(n)
-        C = Group.direct([Cyclic(m)]*n)
+        C = Direct([Cyclic(m)]*n)
         
         self.card = S.card*C.card
         self.index = lambda e: C.index(e[0]) + S.index(e[1])*C.card
@@ -1112,6 +957,167 @@ class Dicyclic(Group):
         self.op = lambda g,h: (g+h)%twon + h//twon*twon if g < twon else ( (g-h+n)%twon if h >= twon else (g-h)%twon + twon)
         self.abelian = None
 
+class Quotient(Group):
+    def __init__(self,G,N):
+        assert(G.isNormal(N))
+        self.card = G.card//len(N)
+        self.cosets = [N]
+        self.reprs = [0]
+        self.G = G
+        self.N = N
+        
+        for i in range(G.card):
+            b = True
+            for s in self.cosets:
+                if i in s:
+                    b = False
+                    break
+            if b:
+                self.reprs.append(i)
+                self.cosets.append(G.leftcoset(N,i))
+
+        self.index = lambda e: self.cosets.index(e)
+        self.element = lambda k: {G.element(i) for i in self.cosets[k]}
+        self.op = lambda g,h: self.index(G.leftcoset(N,G.op(self.reprs[g],self.reprs[h])))
+
+    def __repr__(self):
+        return repr(self.G)+"/"+self.N
+
+class Direct(Group):
+    """
+        two ways to call this class:
+            1st: Direct(G1,G2,...,Gn)
+            2nd: Direct([G1,G2,...,Gn])    i.e.   Direct([Cyclic(3)]*4)
+    """
+    def __init__(self,*groups):
+        if isinstance(groups[0],list):
+            groups = groups[0]
+        self.factors = groups
+        self.card = reduce(lambda a,b: a*b, [G.card for G in self.factors])
+        self.abelian = all(G.isAbelian() for G in self.factors)
+        self.cyclic = lcm([G.card for G in self.factors]) == self.card and all(G.isCyclic() for G in groups)
+
+    def element(self,k): #Recursive, returns tuple with elements in G[i]
+        l = []
+        for G in self.factors:
+            l.append(G[k%G.card])
+            k //= G.card
+        return tuple(l)
+
+    def eindex(self,k): # Non recursive, returns tuple with indices in G[i]
+        l = []
+        for G in self.factors:
+            l.append(k%G.card)
+            k //= G.card
+        return tuple(l)
+        
+    def index(self,e): # Recursive, e = tuple with elements in G[i]
+        k = 0
+        f = 1
+        for i in range(len(self.factors)):
+            k += self.factors[i].index(e[i])*f
+            f *= self.factors[i].card
+        return k
+
+    def indexe(self,e): # Non recursive, e = tuple with indices in G[i]
+        k = 0
+        f = 1
+        for i in range(len(self.factors)):
+            k += e[i]*f
+            f *= self.factors[i].card
+        return k
+
+    def op(self,g1,g2):
+        t1 = self.eindex(g1)
+        t2 = self.eindex(g2)
+            
+        return self.indexe([self.factors[i].op(t1[i],t2[i]) for i in range(len(self.factors))])
+
+    def inverse(self,g):
+        t = self.eindex(g)
+        tinv = [self.factors[i].inverse(t[i]) for i in range(len(self.factors))]
+        return self.indexe(tinv)
+
+    def order(self,g):
+        t = self.eindex(g)
+        return lcm([self.factors[i].order(t[i]) for i in range(len(self.factors))])
+
+    def __repr__(self):
+        return "Direct(" + ",".join(repr(G) for G in self.factors)+")"
+
+class Semidirect(Group):
+    """
+        G⋊H
+        G,H groups
+        f: H -> Aut(G) hom.
+
+        Example:
+        G = Cyclic(3)
+        H = Cyclic(4)
+        f = [[0,1,2], [0,2,1], [0,1,2], [0,2,1]]
+    """
+    def __init__(self,G,H,f):
+        assert(all(len(aut)==G.card for aut in f))
+        self.card = G.card*H.card
+        self.G = G
+        self.H = H
+        self.f = f
+        self.finv = [functioninverse(aut) for aut in f]        
+        if not (G.abelian and H.abelian):
+            self.abelian = False
+        else:
+            self.abelian = None
+        self.cyclic = None
+
+    def index(self,e): # Recursive
+        return self.G.index(e[0])+self.H.index(e[1])*self.G.card
+        
+    def element(self,k): # Recursive
+        return (self.G.element(k%self.G.card),self.H.element(k//self.G.card))
+
+    def indexe(self,e): # Non recursive
+        return e[0] + e[1]*self.G.card
+
+    def eindex(self,k): #Non recursive
+        return (k%self.G.card,k//self.G.card)
+
+    def op(self,g1,g2):
+        t1 = self.eindex(g1)
+        t2 = self.eindex(g2)
+        return self.indexe((self.G.op(t1[0],self.f[t1[1]][t2[0]]), self.H.op(t1[1],t2[1])))
+
+    """
+        (a,b)*(c,d) = (a*f[b][c], b*d) = (e,e) <=> d = b^-1  &&  f[b][c] = a^-1
+        f[b][c] = a^-1   <=>   c = f^-1[b][a^-1]
+    """
+    def inverse(self,g):
+        t = self.eindex(g)
+        hinv = self.H.inverse(t[1])
+        ginv = self.finv[t[1]][self.G.inverse(t[0])]
+        return self.indexe((ginv,hinv))
+
+    """
+        (g,h)^n = (g*f[h^1][g]*...*f[h^n][g],h^n) = (g', e) <=>  o(h) | n
+        (g',e)^m = (g'*f[e^1][g']*...*f[e^m][g'],e) = (g'^m,e) = (e,e) <=> o(g') | m
+
+        o((g,h)) | m*n
+
+        o(h) = len(powersh)
+        g' = reduce(...)
+        o(g') = G.order(g)
+
+        order = len(powersh)*G.order(g)
+    """
+    def order(self,g):
+        t = self.eindex(g)
+        powersh = self.H.powers(t[1])
+        g = reduce(lambda a,b: self.G.op(a,b),[self.f[h][t[0]] for h in powersh])
+        return len(powersh)*self.G.order(g)
+
+    def __repr__(self):
+        return "Semidirect("+repr(self.G)+","+repr(self.H)+","+repr(self.f)+")"
+
+
 class Subgroup(Group):
     def __init__(self,G,gen):
         H = self.__genSubgroup(G,gen)
@@ -1122,6 +1128,8 @@ class Subgroup(Group):
         self.op = lambda a,b: d[G.op(H[a],H[b])]
         self.abelian = None
         self.cyclic = None
+        self.gen = gen
+        self.G = G
 
     def __genSubgroup(self,G,gen):
         H = [0]
@@ -1139,7 +1147,9 @@ class Subgroup(Group):
                 break
             size = len(H)
         return H
-        
+
+    def __repr__(self):
+        return "<"+",".join(str(self.G[g]) for g in self.gen)+">"
     
 class Subset():
     def __init__(self,G,H):
@@ -1148,6 +1158,10 @@ class Subset():
         self.card = len(H)
         self.op = lambda g,h: G.op(self.element(g),self.element(h)) ## This returns an element of G that cannot be converted back to an element of H since we don't know of H is closed under the operation of G
         self.subgroup = None
+
+class GroupAction():
+    def __init__(self,G,X):
+        print("todo")
         
 class Homomorphism():
     def __init__(self,G,H,genimg):
@@ -1191,7 +1205,7 @@ class Homomorphism():
         return f.__end
  
     def isIsomorphism(f):
-        if f.__iso != None:
+        if f.__iso is not None:
             return f.__iso
         f.__iso = len(f.codomain()) == len(f.domain()) and f.isInjective()
         return f.__iso
