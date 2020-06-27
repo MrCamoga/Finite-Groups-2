@@ -77,7 +77,7 @@ class Homomorphism():
         return self._f[g]
 
     def image(self):
-        return {self[g] for g in range(len(self.domain()))}
+        return set(self._f)
 
     def kernel(self):
         if self._inj:
