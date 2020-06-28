@@ -39,6 +39,10 @@ GL                                                                              
 PGL                                                                             ✓
 Out(G)                                                                          ✓
 
+
+determinant function
+SO,O
+
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
 wreath product
 change Group.card into a function
@@ -61,6 +65,7 @@ lattice of subgroups
 get set of generators
 composition series
 lower central series
+isSolvable
 quotient group: is abelian / is cyclic / simple
 
 character table

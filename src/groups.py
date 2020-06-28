@@ -29,5 +29,3 @@ from groupspkg.linearalg.gl import GL
 from groupspkg.linearalg.pgl import PGL
 from groupspkg.linearalg.sl import SL
 from groupspkg.linearalg.psl import PSL
-from groupspkg.linearalg.gl32 import GL32
-from groupspkg.linearalg.gl23 import GL23

@@ -29,8 +29,7 @@ class Quotient(Group):
         return self.indices[g]
 
     def getCoset(self, g):
-        return self.G.leftCoset(N,g)
+        return self.G.leftcoset(self.N,g)
 
     def __repr__(self):
         return repr(self.G)+"/"+repr(self.N)
-
