@@ -14,8 +14,19 @@ class Direct(Group):
         self.factors = groups
         self.card = reduce(lambda a, b: a*b, [G.card for G in self.factors])
         self.abelian = all(G.isAbelian() for G in self.factors)
-        self.cyclic = lcm([G.card for G in self.factors]) == self.card and all(
-            G.isCyclic() for G in groups)
+        self.cyclic = lcm([G.card for G in self.factors]) == self.card and all(G.isCyclic() for G in groups)
+        self.generators = self.__getGenerators()
+
+    def __getGenerators(self):
+        if any(G.generators is None for G in self.factors):
+            return
+        generators = set()
+        for i,G in enumerate(self.factors):
+            for g in G.generators:
+                e = [0]*len(self.factors)
+                e[i] = g
+                generators.add(self.indexe(e))
+        return generators
 
     def element(self, k):  # Recursive, returns tuple with elements in G[i]
         l = []

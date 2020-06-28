@@ -10,7 +10,7 @@ def Aut(G, gens = None):
     automorphisms = [dict()]
 
     if gens is None:
-        gens = G.generators()
+        gens = G.generators
     gens = list(gens)
     
     ordersd = G.orders(True)
@@ -38,10 +38,8 @@ def Aut(G, gens = None):
         """
             a*b = b◦a
         """
-        fa = G.automorphism(automorphisms[a])
         fb = G.automorphism(automorphisms[b])
-        fc = composition(fa,fb)
-        c = {i:fc[i] for i in gens}
+        c = {i:fb[automorphisms[a][i]] for i in gens}
         return index(c)
 
     Aut = Group(len(automorphisms), e, op)

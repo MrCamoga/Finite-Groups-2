@@ -34,6 +34,10 @@ central product                                                                 
 homomorphisms class                                                             ✓
 subset/subgroup class                                                           ✓
 isCyclic                                                                        ✓
+Aut(G)                                                                          ✓
+GL                                                                              ✓
+PGL                                                                             ✓
+Out(G)                                                                          ✓
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
 wreath product
@@ -49,10 +53,11 @@ compute orders in O(n)
 isIsomorphic (check cardinals, cyclic, abelian, element orders,
     conjugacy classes,...)
 isSimple
+
+Aut(G) (as subgroup of Sn)
 Sylow subgroups, normal subgroups, subgroups
 commutator subgroup
 lattice of subgroups
-Aut(G) (as subgroup of Sn)
 get set of generators
 composition series
 lower central series
@@ -64,12 +69,11 @@ stabilizer, orbits, group action
 optimize Units()
 compute automorphism given the images of generators
 
-SL
 simple groups
 sporadic groups
 
 Methods that don't work yet:
-    Out(G), GL, SL, PSL, PGL: they depend on Aut(G)
+    SL, PSL
 
 
 Duplicated methods/classes:

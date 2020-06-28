@@ -13,8 +13,11 @@ def Inn(G, iso=0):
         elems = [[G.leftconjugate(g, x) for x in range(G.card)] for g in Q.reprs]
 
         def e(k): return elems[k]
-        def op(g, h): return elems.index(composition(e(h), e(g)))
+        def op(g, h): return index(composition(e(h), e(g)))
+        def index(e): return elems.index(e)
+
         Inn = Group(len(elems), e, op)
+        Inn.index = index
         return Inn
     if iso == 1:
         return Q
