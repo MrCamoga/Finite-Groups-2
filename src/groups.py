@@ -8,6 +8,7 @@ from operations.quotient import Quotient
 
 from operations.inn import Inn
 from operations.aut import Aut
+from operations.aut2 import Aut2
 from operations.out import Out
 
 from operations.composition import Composition

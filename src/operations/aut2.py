@@ -1,51 +1,53 @@
 from group import functioninverse, composition
 from groups import Group
+from operator import itemgetter
+from bisect import bisect_left
 
-def Aut(G, gens = None):
+def Aut2(G, gens = None):
     """
         Group or automorphisms of G
         gens: set/list with generators of G
     """
-
-    aut = [dict()]
-
     if gens is None:
         gens = G.generators
     gens = list(gens)
+    aut = [[0]*len(gens)]
     
     ordersd = G.orders(True)
     genorders = [G.order(g) for g in gens]
 
-    for g in range(len(gens)):
+    for i in range(len(gens)):
         newaut = []
         for a in aut:
-            R = ordersd[genorders[g]] - G.subgroup(a.values())
-            for fg in R:
-                automorphism = dict(a)
-                automorphism[gens[g]] = fg
+            for fg in ordersd[genorders[i]] - G.subgroup(a):
+                automorphism = list(a)
+                automorphism[i] = fg
                 newaut.append(automorphism)
                 
         del aut
         aut = newaut
 
+    aut.sort(key = itemgetter(*(k for k in range(len(gens)))))
+
     def e(k):
         return aut[k]
 
     def index(e):
-        return aut.index(e)
+        return bisect_left(aut,e)
 
-    automorphisms = [G.automorphism(a) for a in aut]
+    automorphisms = [G.automorphism({g:a[i] for i,g in enumerate(gens)}) for a in aut]
 
     def op(a,b):
         """
             a*b = b◦a
         """
         fb = automorphisms[b]
-        c = {i:fb[aut[a][i]] for i in gens}
+        c = [fb[aut[a][i]] for i in range(len(gens))]
         return index(c)
 
     Aut = Group(len(aut), e, op)
     Aut.index = index
     Aut.inverse = lambda f: index(functioninverse(automorphisms(f)))
+    Aut.aut = aut
     
     return Aut

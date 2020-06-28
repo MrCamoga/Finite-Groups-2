@@ -23,8 +23,7 @@ class Quotient(Group):
 
         self.index = lambda e: self.cosets.index(e)
         self.element = lambda k: {G.element(i) for i in self.cosets[k]}
-        self.op = lambda g, h: self.getCosetIndex(
-            G.op(self.reprs[g], self.reprs[h]))
+        self.op = lambda g, h: self.getCosetIndex(G.op(self.reprs[g], self.reprs[h]))
 
     def inverse(self, g):
         return self.getCosetIndex(self.G.inverse(self.reprs[g]))
