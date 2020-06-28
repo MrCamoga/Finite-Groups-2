@@ -47,7 +47,6 @@ def Aut2(G, gens = None):
 
     Aut = Group(len(aut), e, op)
     Aut.index = index
-    Aut.inverse = lambda f: index(functioninverse(automorphisms(f)))
-    Aut.aut = aut
+    Aut.inverse = lambda f: index(list(itemgetter(*gens)(functioninverse(automorphisms[f]))))
     
     return Aut

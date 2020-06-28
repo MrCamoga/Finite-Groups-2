@@ -1,12 +1,12 @@
 from functools import reduce
-from groups import Group, Cyclic, Direct, Aut
+from groups import Group, Cyclic, Direct, Aut2
 
 class GL(Group):
     """
         GL(n,k): Aut((Z/kZ)^n)
     """
     def __init__(self, n, k):
-        G = Aut(Direct([Cyclic(k)]*n))
+        G = Aut2(Direct([Cyclic(k)]*n))
         assert(G.card == reduce(lambda a, b: a*b, [pow(k, n)-pow(k, i) for i in range(n)]))
         self.card = G.card
         self.__dim = (n, k)
