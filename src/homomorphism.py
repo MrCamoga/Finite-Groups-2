@@ -15,6 +15,9 @@ class Homomorphism():
             raise Exception("Function is not well defined")
         self.genimg = genimg
 
+    def __call__(self,g):
+        return self[g]
+
     def __createFunction(self,G,H,genimg):
         if not all(G.order(g)%H.order(h) == 0 for g,h in genimg.items()): #TODO
             raise Exception("Function is not well defined")

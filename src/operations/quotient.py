@@ -10,6 +10,7 @@ class Quotient(Group):
         self.N = N
         self.abelian = None
         self.cyclic = None
+        self.simple = None
 
         for i in range(G.card):
             if i not in self.indices:
