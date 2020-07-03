@@ -30,6 +30,7 @@ class Units2(Group):
         self.card = G.card
         self.__n = n
         self.op = G.op
+        self.generators = G.generators
         self.abelian = G.abelian
         self.cyclic = None
         self.simple = None

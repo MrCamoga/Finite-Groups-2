@@ -12,6 +12,12 @@ class Alternating(Group):
         self.element = self.__getperm
         self.index = lambda e: self.__index(e[:])
         self.op = lambda g, h: self.__index(composition(self[h], self[g]))
+        if n < 3:
+            self.generators = [0]
+        elif n%2 == 0:
+            self.generators = [1, self.index([k%(n-1) for k in range(1,n)]+[n-1])]
+        else:
+            self.generators = [1, self.index([k%(n-2) for k in range(2,n)]+[n-2,n-1])]
         self.abelian = n <= 3
         self.cyclic = n <= 3
         self.simple = n >= 5

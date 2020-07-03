@@ -8,6 +8,7 @@ class GeneralizedQuaternion(Group):
         self.element = lambda k: k & (self.card-1)
         self.index = self.element
         self.op = lambda g, h: (g+h) % n + h//n*n if g < n else ((g-h+n//2) % n if h >= n else (g-h) % n + n)
+        self.generators = {1,n}
         self.abelian = None
         self.cyclic = None
 

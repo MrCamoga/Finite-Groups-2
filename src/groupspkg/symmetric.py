@@ -12,7 +12,7 @@ class Symmetric(Group):
         self.element = self.__lehmer
         self.index = lambda e: self.__lehmerinv(e[:])
         self.op = lambda g, h: self.__lehmerinv(composition(self[h], self[g]))
-##        self.generators = {self.__lehmerinv([k for k in range(n-2)]+[n-1,n-2]),self.__lehmerinv([k%n for k in range(1,n+1)])}
+        self.generators = {self.__lehmerinv([k for k in range(n-2)]+[n-1,n-2]),self.__lehmerinv([k%n for k in range(1,n+1)])}
         self.abelian = n <= 2
         self.cyclic = n <= 2
         self.simple = n <= 2
