@@ -24,7 +24,7 @@ class Wreath(Group):
         ta = self.eindex(a)
         tb = self.eindex(b)
         
-        return self.indexe((self.D.op(ta[0], self.D.index(composition(self.A[ta[1]],self.D[tb[0]]))), self.H.op(ta[1], tb[1])))
+        return self.indexe((self.D.op(ta[0], self.D.indexe(composition(self.A[ta[1]],self.D.eindex(tb[0])))), self.H.op(ta[1], tb[1])))
 
     def index(self,e):  # Recursive
         return self.D.index(e[0])+self.H.index(e[1])*self.D.card

@@ -3,6 +3,7 @@ from math import factorial as fact
 from functools import reduce
 from sympy import isprime, ntheory, lcm, mod_inverse
 from random import randrange
+from operator import itemgetter
 
 
 """
@@ -39,6 +40,10 @@ GL                                                                              
 PGL                                                                             ✓
 Out(G)                                                                          ✓
 
+commutator subgroup
+wreath product
+change the semidirect product f from array of automorphisms to an actual function
+    
 
 quotient of group whose elements are lists cannot return cosets because lists are not hashable
 
@@ -47,10 +52,8 @@ determinant function
 SO,O
 
 define group from generators and relations, for example G = < a,b,c,d | a3=b3=c3=d3=1, ab=ba, cac-1=ab-1, ad=da, bc=cb, bd=db, dcd-1=ab-1c > 
-wreath product
-change Group.card into a function
-change the semidirect product f from array of automorphisms to an actual function
-    define GeneralizedSymmetric group with Group.semidirect
+
+define GeneralizedSymmetric group with Group.semidirect
 fast order for predefined groups
 Write permutations as disjoint cycles (enumerate partitions of n etc), this could be useful for conjugacy classes
 Change Symmetric.__lehmerinv and Alternating.__index from O(n^2) to O(n)
@@ -63,7 +66,6 @@ isSimple
 
 Aut(G) (as subgroup of Sn)
 Sylow subgroups, normal subgroups, subgroups
-commutator subgroup
 lattice of subgroups
 get set of generators
 composition series
@@ -604,7 +606,7 @@ def composition(f, g):
     """
     Returns g◦f
     """
-    return [g[x] for x in f]
+    return list(itemgetter(*f)(g))
 
 class Subset():
     def __init__(self, G, H):

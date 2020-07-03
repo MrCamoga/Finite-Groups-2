@@ -66,8 +66,7 @@ class Direct(Group):
 
     def inverse(self, g):
         t = self.eindex(g)
-        tinv = [self.factors[i].inverse(t[i])
-                for i in range(len(self.factors))]
+        tinv = [self.factors[i].inverse(t[i]) for i in range(len(self.factors))]
         return self.indexe(tinv)
 
     def order(self, g):

@@ -75,3 +75,20 @@ class WreathCyclic(Group):
 
     def __repr__(self):
         return "WreathCyclic("+str(self.__m)+","+str(self.__n)+")"
+
+class WreathSymmetric(Group):
+    """
+    Sm≀Sn
+    """
+    def __init__(self,m,n):
+        self.__m = m
+        self.__n = n
+        self.A = Direct([Symmetric(m)]*n)
+        self.B = Symmetric(n)
+        self.card = self.A.card*self.B.card
+        self.index = lambda e: self.A.index(e[0])+self.B.index(e[1])*self.A.card
+        self.element = lambda k: (self.A.element(k % self.A.card), self.A.element(k//self.A.card))
+        self.op = lambda a,b: self.A.op(a%self.A.card, self.A.indexe(composition(self.B[a//self.A.card],self.A.eindex(b%self.A.card)))) + self.B.op(a//self.A.card, b//self.A.card)*self.A.card
+
+    def __repr__(self):
+        return "WreathSymmetric("+str(self.__m)+","+str(self.__n)+")"
