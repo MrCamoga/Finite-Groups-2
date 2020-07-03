@@ -5,7 +5,9 @@ class Dihedral2(Group):
     Dihedral group as Cn⋊C2, C2 = <b> acting on Cn by bab^-1 = a^-1
     """
     def __init__(self, n):
-        D = Semidirect(Cyclic(n), Cyclic(2), [[k for k in range(n)], [(n-k) % n for k in range(n)]])
+        # f = [[k for k in range(n)], [(n-k) % n for k in range(n)]]
+        f = lambda i: lambda k: -k%n if i == 1 else k
+        D = Semidirect(Cyclic(n), Cyclic(2), f)
         self.card = D.card
 
         self.element = D.element
