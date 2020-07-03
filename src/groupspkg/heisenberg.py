@@ -1,4 +1,4 @@
-from groups import Group, Cyclic, Direct, Semidirect
+from groups import Group, Cyclic, Direct, Semidirect, ElementaryAbelianGroup
 from sympy import isprime
 
 def Heisenberg(p):
@@ -15,14 +15,3 @@ def Extraspecial(p,n,s):
     D = ElementaryAbelianGroup(p,2*n)
     # f = [D.automorphism({})]
     pass
-
-def ElementaryAbelianGroup(p,n):
-    """
-    Elementary Abelian group of order p^n
-    """
-    assert(isprime(p))
-    return Direct([Cyclic(p)]*n)
-
-def KleinGroup():
-    return ElementaryAbelianGroup(2,2)
-

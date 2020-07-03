@@ -14,7 +14,7 @@ from operations.out import Out
 
 from operations.composition import Composition
 
-from groupspkg.cyclic import Cyclic
+from groupspkg.abeliangroups import Cyclic, Units, Units2, FalseWitness, ElementaryAbelianGroup, KleinGroup
 from groupspkg.dicyclic import Dicyclic
 from groupspkg.dihedral import Dihedral
 from groupspkg.dihedral2 import Dihedral2
@@ -22,12 +22,7 @@ from groupspkg.symmetric import Symmetric
 from groupspkg.alternating import Alternating
 from groupspkg.heisenberg import Heisenberg
 from groupspkg.generalizedquaternion import GeneralizedQuaternion
-from groupspkg.generalizedsymmetric import GeneralizedSymmetric
-from groupspkg.generalizedsymmetric import GeneralizedAlternating
-from groupspkg.generalizedsymmetric import WreathCyclic
-from groupspkg.units import Units
-from groupspkg.units2 import Units2
-from groupspkg.falsewitness import FalseWitness
+from groupspkg.specialwreath import GeneralizedSymmetric, GeneralizedAlternating, WreathCyclic, WreathSymmetric
 
 from action import GroupAction
 
