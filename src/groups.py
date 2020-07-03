@@ -5,6 +5,7 @@ from operations.direct import Direct
 from operations.semidirect import Semidirect
 from operations.central import CentralProduct
 from operations.quotient import Quotient
+from operations.wreath import Wreath
 
 from operations.inn import Inn
 from operations.aut import Aut
@@ -19,11 +20,16 @@ from groupspkg.dihedral import Dihedral
 from groupspkg.dihedral2 import Dihedral2
 from groupspkg.symmetric import Symmetric
 from groupspkg.alternating import Alternating
+from groupspkg.heisenberg import Heisenberg
 from groupspkg.generalizedquaternion import GeneralizedQuaternion
 from groupspkg.generalizedsymmetric import GeneralizedSymmetric
+from groupspkg.generalizedsymmetric import GeneralizedAlternating
+from groupspkg.generalizedsymmetric import WreathCyclic
 from groupspkg.units import Units
 from groupspkg.units2 import Units2
 from groupspkg.falsewitness import FalseWitness
+
+from action import GroupAction
 
 from groupspkg.linearalg.gl import GL
 from groupspkg.linearalg.pgl import PGL
