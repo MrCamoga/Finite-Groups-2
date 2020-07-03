@@ -3,8 +3,8 @@ from groups import Symmetric, Homomorphism
 class GroupAction():
     def __init__(self,G, X, genimg):
         self._S = Symmetric(len(X))
-        genimg = {g:self._S.index(f) for g,f in genimg.items()}
-        self._f = Homomorphism(G,self._S,genimg)
+        self._genimg = genimg
+        self._f = Homomorphism(G,self._S,{g:self._S.index(f) for g,f in genimg.items()})
         self.X = X
         self.G = G
 
@@ -25,3 +25,6 @@ class GroupAction():
 
     def isFaithful(self):
         return self._f.isInjective()
+
+    def __repr__(self):
+        return "GroupAction(" + repr(self.G) + "," + repr(self.X) + "," + repr(self._genimg) +  ")"

@@ -14,6 +14,7 @@ class Wreath(Group):
 
     """
     def __init__(self,G,Act):
+        self._G = G
         self.D = Direct([G]*len(Act.X))
         self.H = Act.G
         self.A = Act
@@ -36,3 +37,6 @@ class Wreath(Group):
 
     def eindex(self, k):  # Non recursive
         return (k % self.D.card, k//self.D.card)
+
+    def __repr__(self):
+        return "Wreath" + repr(self._G) + ","+repr(self.A)+")"
