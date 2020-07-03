@@ -16,6 +16,8 @@ class GL(Group):
         self.abelian = n == 1
         self.cyclic = None
         self.simple = None
+        self.basis = G.gens
+        self.field = G.group
 
     def __repr__(self):
         return "GL"+repr(self.__dim)
