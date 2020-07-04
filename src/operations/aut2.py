@@ -23,7 +23,7 @@ def Aut2(G, gens = None):
             for fg in ordersd[genorders[i]] - H:
                 automorphism = list(a)
                 automorphism[i] = fg
-                if set(G.powers(fg)).intersection(H) == {0}:
+                if set(G.powers(fg)).intersection(H) == {G.identity()}:
                     newaut.append(tuple(automorphism))
                 
         del aut

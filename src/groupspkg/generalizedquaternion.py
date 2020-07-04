@@ -11,6 +11,8 @@ class GeneralizedQuaternion(Group):
         self.generators = {1,n}
         self.abelian = None
         self.cyclic = None
+        self.simple = None
+        self.id = 0
 
     def __repr__(self):
         return "GeneralizedQuaternion("+self.__n+")"

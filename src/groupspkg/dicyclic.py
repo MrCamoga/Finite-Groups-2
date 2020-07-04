@@ -11,6 +11,8 @@ class Dicyclic(Group):
         self.generators = {1,twon}
         self.abelian = None
         self.cyclic = None
+        self.simple = None
+        self.id = 0
 
     def __repr__(self):
         return "Dicyclic("+self.__n+")"

@@ -10,12 +10,13 @@ class Symmetric(Group):
         self.card = fact(n)
         self.__n = n
         self.element = self.__lehmer
-        self.index = lambda e: self.__lehmerinv(e[:])
+        self.index = lambda e: self.__lehmerinv(e)
         self.op = lambda g, h: self.__lehmerinv(composition(self[h], self[g]))
-        self.generators = {1,self.__lehmerinv([k%n for k in range(1,n+1)])}
+        self.generators = {1,sum(fact(k) for k in range(1,n))}
         self.abelian = n <= 2
         self.cyclic = n <= 2
         self.simple = n <= 2
+        self.id = 0
         self.inverse = lambda k: self.__lehmerinv(functioninverse(self.element(k)))
 
     def __repr__(self):
@@ -39,22 +40,19 @@ class Symmetric(Group):
             pass
 
     def __lehmerinv(self, p):
-        for i in range(self.__n):
-            for j in range(i+1, self.__n):
-                if p[j] > p[i]:
-                    p[j] -= 1
-
+        r = list(range(self.__n))
         f = self.card//self.__n
         n = 0
-
-        for i in range(0, self.__n-1):
-            n += f*p[i]
-            f //= self.__n-1-i
+        for x in range(self.__n-1):
+            i = r.index(p[x])
+            del r[i]
+            n += f*i
+            f //= self.__n-1-x
         return n
 
     def __lehmer(self, k):
         p = self.card//self.__n
-        arr = [k for k in range(self.__n)]
+        arr = list(range(self.__n))
         perm = []
         for i in range(self.__n-1, 0, -1):
             perm.append(arr.pop(k//p))

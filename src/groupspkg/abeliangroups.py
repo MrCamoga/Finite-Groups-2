@@ -11,6 +11,7 @@ class Cyclic(Group):
         self.abelian = True
         self.cyclic = True
         self.simple = isprime(n)
+        self.id = 0
         self.inverse = lambda g: -g % n
         self.order = lambda g: self.card//gcd(self.card,g)
 
@@ -29,11 +30,13 @@ class Units(Group):
         d = {e[i]: i for i in range(len(e))}
         self.element = lambda k: e[k]
         self.index = lambda k: d[k]
-# self.index = lambda k: bisect(e,k)-1    slower (nlogn) but doesn't require inverse dictionary d
         self.card = len(e)
         self.__n = n
         self.op = lambda g, h: self.index((e[g]*e[h]) % n)
         self.abelian = True
+        self.cyclic = None
+        self.simple = None
+        self.id = 0
         self.inverse = lambda g: self.index(mod_inverse(e[g], n))
 
     def __repr__(self):
@@ -62,7 +65,6 @@ class Units2(Group):
                 l += [k-1, k**(v-1)]
         l.sort()
         groups = [Cyclic(i) for i in l]
-        print([G.card for G in groups])
         G = Direct(groups)
         self.element = G.element
         self.index = G.index
@@ -73,6 +75,7 @@ class Units2(Group):
         self.abelian = G.abelian
         self.cyclic = None
         self.simple = None
+        self.id = 0
 
     def __repr__(self):
         return "Units2("+str(self.__n)+")"
@@ -96,6 +99,9 @@ class FalseWitness(Group):
         self.__n = n
         self.op = lambda g, h: self.index((e[g]*e[h]) % n)
         self.abelian = True
+        self.cyclic = None
+        self.simple = None
+        self.id = 0
         self.inverse = lambda k: self.index(mod_inverse(e[k], n))
 
     def __repr__(self):

@@ -14,6 +14,7 @@ class Dihedral(Group):
         self.abelian = n == 1
         self.cyclic = n == 1
         self.simple = n == 1
+        self.id = 0
         self.inverse = lambda g: -g % n if g < n else g
 
     def __repr__(self):

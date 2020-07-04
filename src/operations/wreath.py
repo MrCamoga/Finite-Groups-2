@@ -19,6 +19,11 @@ class Wreath(Group):
         self.H = Act.G
         self.A = Act
         self.card = self.D.card*self.H.card
+        
+        self.abelian = None
+        self.cyclic = None
+        self.simple = None
+        self.id = self.indexe((self.D.identity(),self.H.identity()))
     
     def op(self,a,b):
         ta = self.eindex(a)

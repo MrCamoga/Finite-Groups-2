@@ -11,6 +11,7 @@ class Quotient(Group):
         self.abelian = None
         self.cyclic = None
         self.simple = None
+        self.id = self.indices[G.identity()]
 
         for i in range(G.card):
             if i not in self.indices:

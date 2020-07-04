@@ -13,9 +13,11 @@ class Direct(Group):
             groups = groups[0]
         self.factors = groups
         self.card = reduce(lambda a, b: a*b, [G.card for G in self.factors])
+        self.generators = self.__getGenerators()
         self.abelian = all(G.isAbelian() for G in self.factors)
         self.cyclic = lcm([G.card for G in self.factors]) == self.card and all(G.isCyclic() for G in groups)
-        self.generators = self.__getGenerators()
+        self.simple = False if len(groups) > 1 else groups[0].simple
+        self.id = self.indexe([G.identity() for G in groups])
 
     def __getGenerators(self):
         if any(G.generators is None for G in self.factors):

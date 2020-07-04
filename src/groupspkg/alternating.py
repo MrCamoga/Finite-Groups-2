@@ -14,13 +14,16 @@ class Alternating(Group):
         self.op = lambda g, h: self.__index(composition(self[h], self[g]))
         if n < 3:
             self.generators = [0]
+        elif n == 3:
+            self.generators = [1]
         elif n%2 == 0:
-            self.generators = [1, self.index([k%(n-1) for k in range(1,n)]+[n-1])]
+            self.generators = [1, sum(fact(k) for k in range(4,n))//2+4]
         else:
-            self.generators = [1, self.index([k%(n-2) for k in range(2,n)]+[n-2,n-1])]
+            self.generators = [1, sum(fact(k) for k in range(4,n))]
         self.abelian = n <= 3
         self.cyclic = n <= 3
         self.simple = n >= 5
+        self.id = 0
         self.inverse = lambda k: self.__index(functioninverse(self.element(k)))
 
     def __repr__(self):

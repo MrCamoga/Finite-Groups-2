@@ -21,9 +21,9 @@ class Homomorphism():
     def __createFunction(self,G,H,genimg):
         if not all(G.order(g)%H.order(h) == 0 for g,h in genimg.items()): #TODO
             raise Exception("Function is not well defined")
-        f = [0]*G.card
+        f = [G.identity()]*G.card
 
-        S = {0}
+        S = {G.identity()}
         size = 1
 
         for g, i in genimg.items():
@@ -84,8 +84,8 @@ class Homomorphism():
 
     def kernel(self):
         if self._inj:
-            return {0}
-        ker = {g for g in range(len(self.domain())) if self[g] == 0}
+            return {self._dom.identity()}
+        ker = {g for g in range(len(self.domain())) if self[g] == self._dom.identity()}
         self._inj = len(ker) == 1
         return ker
 

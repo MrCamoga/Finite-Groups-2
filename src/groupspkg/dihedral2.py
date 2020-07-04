@@ -16,6 +16,7 @@ class Dihedral2(Group):
         self.abelian = n == 1
         self.cyclic = n == 1
         self.simple = n == 1
+        self.id = 0
         self.order = D.order
 
     def __repr__(self):

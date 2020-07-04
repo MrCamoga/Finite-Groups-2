@@ -21,7 +21,6 @@ class Semidirect(Group):
     """
 
     def __init__(self, G, H, f):
-        # assert(all(len(aut) == G.card for aut in f))
         self.card = G.card*H.card
         self.G = G
         self.H = H
@@ -38,7 +37,10 @@ class Semidirect(Group):
             self.abelian = False
         else:
             self.abelian = None
+
         self.cyclic = None
+        self.simple = False if H.card > 1 else G.simple
+        self.id = self.indexe((G.identity(),H.identity()))
 
     def index(self, e):  # Recursive
         return self.G.index(e[0])+self.H.index(e[1])*self.G.card

@@ -1,6 +1,9 @@
 from groups import Group
 
 class Subgroup(Group):
+    """
+        Define subgroup by generators or by set of elements
+    """
     def __init__(self, G, gens = None, H = None):
         if H is None:
             H = self.__genSubgroup(G, gens)
@@ -12,12 +15,13 @@ class Subgroup(Group):
         self.abelian = None
         self.cyclic = None
         self.simple = None
+        self.id = d[G.identity()]
         self.gens = gens
         self.G = G
 
     def __genSubgroup(self, G, gens):
-        H = [0]
-        S = {0}
+        H = [G.identity()]
+        S = {G.identity()}
         size = 1
 
         while True:
