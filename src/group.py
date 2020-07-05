@@ -42,7 +42,8 @@ Out(G)                                                                          
 commutator subgroup
 wreath product
 change the semidirect product f from array of automorphisms to an actual function
-    
+derived series
+isSolvable
 
 quotient of group whose elements are lists cannot return cosets because lists are not hashable
 
@@ -68,7 +69,6 @@ lattice of subgroups
 get set of generators
 composition series
 lower central series
-isSolvable
 quotient group: is abelian / is cyclic / simple
 
 character table
@@ -357,7 +357,18 @@ class Group:
                 S.add(self.commutator(g,k))
         return self.subgroup(S)
             
+    def derivedSeries(self):
+        from groups import Subgroup
+        S = [self]
+        while True:
+            C = S[-1].commutatorSubgroup()
+            if len(C) == len(S[-1]):
+                return S
+            S.append(Subgroup(S[-1],H=list(C)))
 
+    def isSolvable(self):
+        return len(self.derivedSeries()[-1]) == 1
+        
     def pow(self, g, i):
         """
             g^i

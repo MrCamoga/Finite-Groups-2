@@ -1,5 +1,6 @@
 from group import Group
 from homomorphism import Homomorphism
+from subgroup import Subgroup
 
 from operations.direct import Direct
 from operations.semidirect import Semidirect
@@ -22,7 +23,7 @@ from groupspkg.symmetric import Symmetric
 from groupspkg.alternating import Alternating
 from groupspkg.heisenberg import Heisenberg
 from groupspkg.generalizedquaternion import GeneralizedQuaternion
-from groupspkg.specialwreath import GeneralizedSymmetric, GeneralizedAlternating, WreathCyclic, WreathSymmetric
+from groupspkg.specialwreath import GeneralizedSymmetric, GeneralizedAlternating, WreathCyclic, WreathSymmetric, CompleteMonomialGroup, HyperOctahedralGroup
 
 from action import GroupAction
 

@@ -8,6 +8,8 @@ class Subgroup(Group):
         if H is None:
             H = self.__genSubgroup(G, gens)
         self.card = len(H)
+        H.sort()
+        self._H = H
         d = {H[i]: i for i in range(len(H))}
         self.element = lambda k: G[H[k]]
         self.index = lambda e: d[G.index(e)]
@@ -38,4 +40,7 @@ class Subgroup(Group):
         return H
 
     def __repr__(self):
-        return "<"+",".join(str(self.G[g]) for g in self.gens)+">"
+        if self.gens is not None:
+            return "<"+",".join(str(self.G[g]) for g in self.gens)+">"
+        else:
+            return repr(self._H)
