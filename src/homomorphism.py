@@ -85,7 +85,7 @@ class Homomorphism():
     def kernel(self):
         if self._inj:
             return {self._dom.identity()}
-        ker = {g for g in range(len(self.domain())) if self[g] == self._dom.identity()}
+        ker = {g for g in self.domain() if self[g] == self._dom.identity()}
         self._inj = len(ker) == 1
         return ker
 

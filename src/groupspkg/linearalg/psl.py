@@ -11,6 +11,7 @@ class PSL(Group):
         self.abelian = G.abelian
         self.cyclic = G.cyclic
         self.simple = n > 2 or (k != 2 and k != 3)
+        self.id = None
 
     def __repr__(self):
         return "PSL"+str(self.__dim)

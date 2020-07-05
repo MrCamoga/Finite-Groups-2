@@ -13,7 +13,7 @@ class Quotient(Group):
         self.simple = None
         self.id = self.indices[G.identity()]
 
-        for i in range(G.card):
+        for i in G:
             if i not in self.indices:
                 coset = G.leftcoset(N, i)
                 for g in coset:

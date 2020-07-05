@@ -14,6 +14,6 @@ def CentralProduct(A: Group, B: Group, C: list, D: list, f: list):
     # TODO verify f is an isomorphism
 
     AB = A*B
-    Z = {AB.indexe((C[g], B.inverse(D[f[g]]))) for g in range(len(C))}
+    Z = {AB.indexe((C[g], B.inverse(D[f[g]]))) for g in C}
 
     return AB/Z

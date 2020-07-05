@@ -44,12 +44,12 @@ wreath product
 change the semidirect product f from array of automorphisms to an actual function
 derived series
 isSolvable
+hyperoctahedral group
 
 quotient of group whose elements are lists cannot return cosets because lists are not hashable
 
 
 metacyclic group
-hyperoctahedral group
 
 determinant function
 SO,O
@@ -67,9 +67,11 @@ Aut(G) (as subgroup of Sn)
 Sylow subgroups, normal subgroups, subgroups
 lattice of subgroups
 get set of generators
+reduce set of generators on Group.subgroup()
 composition series
 lower central series
 quotient group: is abelian / is cyclic / simple
+
 
 character table
 
@@ -84,7 +86,6 @@ Methods that don't work yet:
 
 Duplicated methods/classes:
 
-orders > orders2
 centralizer2 >?? centralizer
 Units2 > Units
 """
@@ -209,11 +210,11 @@ class Group:
             {g∈G : gs=sg}
         """
         if self.isAbelian():
-            return {g for g in range(self.card)}
+            return {g for g in self}
 
         C = {self.identity(), s}
 
-        H = {g for g in range(self.card)}
+        H = {g for g in self}
 
         while len(H) > 0:
             g = H.pop()
@@ -229,20 +230,20 @@ class Group:
         return C
 
     def centralizer2(self, s):
-        return {g for g in range(self.card) if self.op(g, s) == self.op(s, g)}
+        return {g for g in self if self.op(g, s) == self.op(s, g)}
 
     def normalizer(self, H):
         if self.isAbelian():
-            return {g for g in range(self.card)}
-        return {g for g in range(self.card) if self.leftcoset(H, g) == self.rightcoset(H, g)}
+            return {g for g in self}
+        return {g for g in self if self.leftcoset(H, g) == self.rightcoset(H, g)}
 
     def normalizer2(self, H):
         if self.isAbelian():
-            return {g for g in range(self.card)}
+            return {g for g in self}
 
         N = set(H)
 
-        for g in range(len(self)):
+        for g in self:
             if g in N:
                 continue
             if self.leftcoset(H, g) == self.rightcoset(H, g):
@@ -259,7 +260,7 @@ class Group:
 
     def orders(self, Dict=False):
         o = {self.identity(): 1}
-        elements = {g for g in range(self.card)}
+        elements = {g for g in self}
 
         while len(elements) > 0:
             g = elements.pop()
@@ -278,52 +279,20 @@ class Group:
             for k, v in o.items():
                 h.setdefault(v, set()).add(k)
             return h
-        return [o[i] for i in range(len(self))]
-
-    def orders2(self):
-        o = {self.identity(): 1}
-        elements = {g for g in range(1, self.card)}
-
-        while len(elements) > 0:
-            g = elements.pop()
-            p = g
-            powers = [g]
-            k = -1
-            while True:
-                t = self.op(p, g)
-                if t == 0:
-                    orderg = len(powers)+1
-                    o[g] = orderg
-                    for i in range(1, k):
-                        o[powers[i]] = orderg//gcd(i+1, orderg)
-                        elements.discard(powers[i])
-                    break
-                if t in o:
-                    if len(powers) == k+1:
-                        orderg = lcm(o[powers[-1]], o[t])
-                        o[g] = orderg
-                        for i in range(1, k):
-                            o[powers[i]] = orderg//gcd(i+1, orderg)
-                            elements.discard(powers[i])
-                        break
-                    else:
-                        k = len(powers)
-                p = t
-                powers.append(t)
-        return [o[i] for i in range(len(self))]
+        return [o[i] for i in self]
 
     def center(self):
         """
             Z(G) = {g∈G : gs=sg ∀s∈G}
         """
         if self.abelian:
-            return {k for k in range(self.card)}
+            return {k for k in self}
         Z = {self.identity()}
-        for g in range(self.card):
+        for g in self:
             if g in Z:
                 continue
             b = False
-            for s in range(self.card):
+            for s in self:
                 if s in Z:
                     continue
                 if self.op(s, g) != self.op(g, s):
@@ -343,32 +312,73 @@ class Group:
 
         return Z
 
-    def commutatorSubgroup(self):
+    def derivedSubgroup(self):
         """
+            Commutator subgroup
             [G,G] = {g-1h-1gh : g,h∈G}
         """
+        return self.commutatorSub(self,self)
+
+    def commutatorSub(self,H,K):
+        """
+            Commutator subgroup of subgroups H and K
+            [H,K] = {h-1k-1hk : h∈H,k∈K}
+        """
         S = {self.identity()}
-        for g in range(self.card):
-            if g in S:
-                continue
-            for k in range(self.card):
-                if k in S:
-                    continue
-                S.add(self.commutator(g,k))
+        for h in H:
+            for k in K:
+                S.add(self.commutator(h,k))
         return self.subgroup(S)
             
     def derivedSeries(self):
-        from groups import Subgroup
         S = [self]
+        from groups import Subgroup
+        if self.isAbelian():
+            return S + [Subgroup(self,H=[self.identity()])]
         while True:
-            C = S[-1].commutatorSubgroup()
+            C = S[-1].derivedSubgroup()
+            if len(C) == len(S[-1]):
+                return S
+            S.append(Subgroup(S[-1],H=list(C)))
+
+    def lowerCentralSeries(self):
+        S = [self]
+        from groups import Subgroup
+        if self.isAbelian():
+            return S + [Subgroup(self,H=[self.identity()])]
+        while True:
+            C = self.commutatorSub(S[-1],self)
             if len(C) == len(S[-1]):
                 return S
             S.append(Subgroup(S[-1],H=list(C)))
 
     def isSolvable(self):
         return len(self.derivedSeries()[-1]) == 1
-        
+
+    def isPerfect(self):
+        """
+            [G,G] == G
+        """
+        return len(self.derivedSeries()) == 1
+
+    def perfectCore(self):
+        """
+            Largest perfect subgroup. Limit of the derived series
+        """
+        return self.derivedSeries()[-1]
+
+    def nilpotencyClass(self):
+        """
+            length of the lower central series
+        """
+        return len(self.lowerCentralSeries())
+
+    def isNilpotent(self):
+        """
+            Lower central series end in the trivial subgroup
+        """
+        return len(self.lowerCentralSeries()[-1]) == 1
+    
     def pow(self, g, i):
         """
             g^i
@@ -382,6 +392,9 @@ class Group:
         return p
 
     def inverse(self, g):
+        """
+            g^-1
+        """
         p = g
         while True:
             tmp = self.op(p, g)
@@ -408,18 +421,27 @@ class Group:
         return reduce(self.op, [self.inverse(self.op(h, g)), g, h])
 
     def leftcoset(self, H, g):
+        """
+            gH = {gh : h∈H}
+        """
         return {self.op(g, h) for h in H}
 
     def rightcoset(self, H, g):
+        """
+            Hg = {hg : h∈H}
+        """
         return {self.op(h, g) for h in H}
 
     def conjugacyClass(self, x):
-        return {self.leftconjugate(g, x) for g in range(self.card)}
+        """
+            Cl(x) = {g-1xg : g∈G}
+        """
+        return {self.leftconjugate(g, x) for g in self}
 
     def conjugacyClasses(self):
         Cl = []
 
-        for i in range(self.card):
+        for i in self:
             b = False
             for C in Cl:
                 if i in C:
@@ -455,7 +477,7 @@ class Group:
         for h in H:
             if h in S:
                 continue
-            for g in range(self.card):
+            for g in self:
                 if not self.leftconjugate(g, h) in H:
                     return False
             powers = [h]
@@ -480,7 +502,7 @@ class Group:
             return True
         else:
             S = {self.identity()}
-            for g in range(self.card):
+            for g in self:
                 if g in S:
                     continue
                 for s in S:
@@ -577,7 +599,7 @@ class GroupIter():
 
     def __next__(self):
         if self.index < self.G.card:
-            g = self.G.element(self.index)
+            g = self.index
             self.index += 1
             return g
         raise StopIteration()
@@ -589,9 +611,9 @@ def cayleyTable(self, truerepr=False):
                     False prints element index
     """
     if truerepr:
-        T = [[self[self.op(j, i)] for i in range(self.card)]for j in range(self.card)]
+        T = [[self[self.op(j, i)] for i in self]for j in self]
     else:
-        T = [[self.op(j, i) for i in range(self.card)]for j in range(self.card)]
+        T = [[self.op(j, i) for i in self]for j in self]
 
     for i in T:
         print(",".join(str(j) for j in i))

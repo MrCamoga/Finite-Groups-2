@@ -10,7 +10,7 @@ def Inn(G, iso=0):
     """
     Q = G/G.center()
     if iso & 1 == 0:
-        elems = [[G.leftconjugate(g, x) for x in range(G.card)] for g in Q.reprs]
+        elems = [[G.leftconjugate(g, x) for x in G] for g in Q.reprs]
 
         def e(k): return elems[k]
         def op(g, h): return index(composition(e(h), e(g)))

@@ -16,6 +16,7 @@ class GL(Group):
         self.abelian = n == 1
         self.cyclic = None
         self.simple = None
+        self.id = None
         self.basis = G.gens
         self.field = G.group
 

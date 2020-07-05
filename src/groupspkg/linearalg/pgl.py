@@ -11,6 +11,7 @@ class PGL(Group):
         self.abelian = G.abelian
         self.cyclic = G.cyclic
         self.simple = G.simple
+        self.id = None
 
     def __repr__(self):
         return "PGL"+repr(self.__dim)

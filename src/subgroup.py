@@ -11,9 +11,10 @@ class Subgroup(Group):
         H.sort()
         self._H = H
         d = {H[i]: i for i in range(len(H))}
-        self.element = lambda k: G[H[k]]
+        self.element = lambda k: G[k]
         self.index = lambda e: d[G.index(e)]
-        self.op = lambda a, b: d[G.op(H[a], H[b])]
+        self.op = lambda a, b: G.op(a,b)
+        self.inverse = G.inverse
         self.abelian = None
         self.cyclic = None
         self.simple = None
@@ -39,8 +40,23 @@ class Subgroup(Group):
         H.sort()
         return H
 
+    def __iter__(self):
+        return SubgroupIter(self)
+
     def __repr__(self):
         if self.gens is not None:
             return "<"+",".join(str(self.G[g]) for g in self.gens)+">"
         else:
             return repr(self._H)
+
+class SubgroupIter():
+    def __init__(self, G):
+        self.H = G._H
+        self.index = 0
+
+    def __next__(self):
+        if self.index < len(self.H):
+            g = self.H[self.index]
+            self.index += 1
+            return g
+        raise StopIteration()
