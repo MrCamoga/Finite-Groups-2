@@ -36,7 +36,7 @@ class GeneralizedAlternating(Group):
 def CompleteMonomialGroup(G,n):
     D = Direct([G]*n)
     S = Symmetric(n)
-    return Semidirect(D, S, lambda s: lambda d: D.indexe(composition(S[s],D.eindex(d))))
+    return Semidirect(D, S, lambda s, d: D.indexe(composition(S[s],D.eindex(d))))
 
 def WreathSymmetric(m,n):
     """

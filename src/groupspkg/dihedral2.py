@@ -6,7 +6,7 @@ class Dihedral2(Group):
     """
     def __init__(self, n):
         # f = [[k for k in range(n)], [(n-k) % n for k in range(n)]]
-        f = lambda i: lambda k: -k%n if i == 1 else k
+        f = lambda i, k: -k%n if i == 1 else k
         D = Semidirect(Cyclic(n), Cyclic(2), f)
         self.card = D.card
 

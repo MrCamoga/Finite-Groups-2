@@ -19,7 +19,7 @@ class Subgroup(Group):
         self.cyclic = None
         self.simple = None
         self.id = d[G.identity()]
-        self.gens = gens
+        self.generators = gens
         self.G = G
 
     def __genSubgroup(self, G, gens):
@@ -44,8 +44,8 @@ class Subgroup(Group):
         return SubgroupIter(self)
 
     def __repr__(self):
-        if self.gens is not None:
-            return "<"+",".join(str(self.G[g]) for g in self.gens)+">"
+        if self.generators is not None:
+            return "<"+",".join(str(self.G[g]) for g in self.generators)+">"
         else:
             return repr(self._H)
 

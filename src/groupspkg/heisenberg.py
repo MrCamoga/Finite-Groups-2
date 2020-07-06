@@ -13,7 +13,7 @@ def Heisenberg(p):
     Operation of matrices:
         AB = op(B,A)
     """
-    return Semidirect(ElementaryAbelianGroup(p,2),Cyclic(p),lambda i: lambda k: k//p*p + (k//p*i+k)%p)
+    return Semidirect(ElementaryAbelianGroup(p,2),Cyclic(p),lambda i, k: k//p*p + (k//p*i+k)%p)
 
 def Extraspecial(p,n,s):
     """
