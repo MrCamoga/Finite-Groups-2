@@ -15,4 +15,4 @@ class GeneralizedQuaternion(Group):
         self.id = 0
 
     def __repr__(self):
-        return "GeneralizedQuaternion("+self.__n+")"
+        return "GeneralizedQuaternion("+str(self.__n)+")"

@@ -19,6 +19,9 @@ class Symmetric(Group):
         self.id = 0
         self.inverse = lambda k: self.__lehmerinv(functioninverse(self.element(k)))
 
+    def isSolvable(self):
+        return self.__n <= 4
+
     def __repr__(self):
         return "Symmetric("+str(self.__n)+")"
 

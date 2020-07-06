@@ -83,5 +83,8 @@ class Semidirect(Group):
         g = reduce(lambda a, b: self.G.op(a, b), [self.f(h)(t[0]) for h in powersh])
         return len(powersh)*self.G.order(g)
 
+    def isSolvable(self):
+        return self.G.isSolvable() and self.H.isSolvable()
+
     def __repr__(self):
         return "Semidirect("+repr(self.G)+","+repr(self.H)+","+repr(self.f)+")"

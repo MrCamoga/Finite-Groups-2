@@ -1,8 +1,5 @@
-from math import gcd
-from math import factorial as fact
 from functools import reduce
-from sympy import isprime, ntheory, lcm, mod_inverse
-from random import randrange
+from sympy import isprime, lcm, factorint
 from operator import itemgetter
 
 
@@ -45,6 +42,7 @@ change the semidirect product f from array of automorphisms to an actual functio
 derived series
 isSolvable
 hyperoctahedral group
+lower central series
 
 quotient of group whose elements are lists cannot return cosets because lists are not hashable
 
@@ -69,7 +67,6 @@ lattice of subgroups
 get set of generators
 reduce set of generators on Group.subgroup()
 composition series
-lower central series
 quotient group: is abelian / is cyclic / simple
 
 
@@ -334,7 +331,10 @@ class Group:
         S = [self]
         from groups import Subgroup
         if self.isAbelian():
-            return S + [Subgroup(self,H=[self.identity()])]
+            if self.card > 1:
+                return S + [Subgroup(self,H=[self.identity()])]
+            else:
+                return S
         while True:
             C = S[-1].derivedSubgroup()
             if len(C) == len(S[-1]):
@@ -345,7 +345,10 @@ class Group:
         S = [self]
         from groups import Subgroup
         if self.isAbelian():
-            return S + [Subgroup(self,H=[self.identity()])]
+            if self.card > 1:
+                return S + [Subgroup(self,H=[self.identity()])]
+            else:
+                return S
         while True:
             C = self.commutatorSub(S[-1],self)
             if len(C) == len(S[-1]):
@@ -353,6 +356,9 @@ class Group:
             S.append(Subgroup(S[-1],H=list(C)))
 
     def isSolvable(self):
+        if self.card < 60:
+            return True
+        
         return len(self.derivedSeries()[-1]) == 1
 
     def isPerfect(self):
@@ -371,13 +377,18 @@ class Group:
         """
             length of the lower central series
         """
-        return len(self.lowerCentralSeries())
+        return len(self.lowerCentralSeries())-1
 
     def isNilpotent(self):
         """
             Lower central series end in the trivial subgroup
         """
+        if self.isPGroup():
+            return True
         return len(self.lowerCentralSeries()[-1]) == 1
+
+    def isPGroup(self):
+        return len(factorint(self.card)) == 1
     
     def pow(self, g, i):
         """
@@ -564,8 +575,10 @@ class Group:
         lo1 = {k:len(v) for k,v in o1}
         lo2 = {k:len(v) for k,v in o2}
 
-        if o1 != o2:
+        if lo1 != lo2:
             return False
+        elif self.isAbelian() and other.isAbelian():
+            return True
 
 ##        c1 = self.conjugacyClasses()
 ##        c2 = other.conjugacyClasses()

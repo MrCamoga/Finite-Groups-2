@@ -75,5 +75,8 @@ class Direct(Group):
         t = self.eindex(g)
         return lcm([self.factors[i].order(t[i]) for i in range(len(self.factors))])
 
+    def isSolvable(self):
+        return all(G.isSolvable() for G in self.factors)
+
     def __repr__(self):
         return "Direct(" + ",".join(repr(G) for G in self.factors)+")"

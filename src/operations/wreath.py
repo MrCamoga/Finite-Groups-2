@@ -43,5 +43,8 @@ class Wreath(Group):
     def eindex(self, k):  # Non recursive
         return (k % self.D.card, k//self.D.card)
 
+    def isSolvable(self):
+        return self.D.isSolvable() and self.H.isSolvable()
+
     def __repr__(self):
         return "Wreath" + repr(self._G) + ","+repr(self.A)+")"
