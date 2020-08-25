@@ -18,7 +18,6 @@ from operations.composition import Composition
 from groupspkg.abeliangroups import Cyclic, Units, Units2, FalseWitness, ElementaryAbelianGroup, KleinGroup
 from groupspkg.dicyclic import Dicyclic
 from groupspkg.dihedral import Dihedral
-from groupspkg.dihedral2 import Dihedral2
 from groupspkg.symmetric import Symmetric
 from groupspkg.alternating import Alternating
 from groupspkg.heisenberg import Heisenberg

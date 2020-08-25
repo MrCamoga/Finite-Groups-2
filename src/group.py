@@ -1,5 +1,5 @@
 from functools import reduce
-from sympy import isprime, lcm, factorint
+from sympy import isprime, gcd, lcm, factorint
 from operator import itemgetter
 
 
@@ -325,7 +325,7 @@ class Group:
         for h in H:
             for k in K:
                 S.add(self.commutator(h,k))
-        return self.subgroup(S)
+        return S
             
     def derivedSeries(self):
         S = [self]
@@ -371,7 +371,7 @@ class Group:
         """
             Largest perfect subgroup. Limit of the derived series
         """
-        return self.derivedSeries()[-1]
+        return self.derivedSeries()[-1] 
 
     def nilpotencyClass(self):
         """
@@ -559,6 +559,9 @@ class Group:
             self.simple = False
             return False
 
+        if self.isSolvable():
+            return False
+
         # TODO analize sylow subgroups
 
         return None
@@ -624,9 +627,9 @@ def cayleyTable(self, truerepr=False):
                     False prints element index
     """
     if truerepr:
-        T = [[self[self.op(j, i)] for i in self]for j in self]
+        T = ([self[self.op(j, i)] for i in self]for j in self)
     else:
-        T = [[self.op(j, i) for i in self]for j in self]
+        T = ([self.op(j, i) for i in self]for j in self)
 
     for i in T:
         print(",".join(str(j) for j in i))

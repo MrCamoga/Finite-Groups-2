@@ -8,17 +8,19 @@ class Subgroup(Group):
         if H is None:
             H = self.__genSubgroup(G, gens)
         self.card = len(H)
+        if type(H) == set:
+            H = list(H)
         H.sort()
         self._H = H
         d = {H[i]: i for i in range(len(H))}
         self.element = lambda k: G[k]
-        self.index = lambda e: d[G.index(e)]
+        self.index = lambda e: d[e]
         self.op = lambda a, b: G.op(a,b)
         self.inverse = G.inverse
         self.abelian = None
         self.cyclic = None
         self.simple = None
-        self.id = d[G.identity()]
+        self.id = G.identity()
         self.generators = gens
         self.G = G
 

@@ -11,7 +11,7 @@ class Quotient(Group):
         self.abelian = None
         self.cyclic = None
         self.simple = None
-        self.id = self.indices[G.identity()]
+        self.id = 0
 
         for i in G:
             if i not in self.indices:
@@ -23,6 +23,20 @@ class Quotient(Group):
         self.index = lambda e: self.getCosetIndex(e.pop())
         self.element = lambda k: {G[g] for g in self.getCoset(k)}
         self.op = lambda g, h: self.getCosetIndex(G.op(self.reprs[g], self.reprs[h]))
+        self.generators = self.__genGenerators()
+
+    def __genGenerators(self):
+        gens = set()
+        for g in self.G.generators:
+            if g in self.N:
+                continue
+            b = True
+            for h in gens:
+                if self.G.op(g,self.G.inverse(self.reprs[h])) in self.N:
+                    b = False
+            if b:
+                gens.add(self.getCosetIndex(g))
+        return sorted(list(gens))
 
     def inverse(self, g):
         return self.getCosetIndex(self.G.inverse(self.reprs[g]))

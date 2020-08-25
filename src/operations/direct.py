@@ -1,4 +1,4 @@
-from groups import Group
+from groups import Group, Subgroup
 from functools import reduce
 from sympy import lcm
 
@@ -47,33 +47,35 @@ class Direct(Group):
     def index(self, e):  # Recursive, e = tuple with elements in G[i]
         k = 0
         f = 1
-        for i in range(len(self.factors)):
-            k += self.factors[i].index(e[i])*f
-            f *= self.factors[i].card
+        for i, G in enumerate(self.factors):
+            k += G.index(e[i])*f
+            f *= G.card
         return k
 
     def indexe(self, e):  # Non recursive, e = tuple with indices in G[i]
         k = 0
         f = 1
-        for i in range(len(self.factors)):
+        for i, G in enumerate(self.factors):
             k += e[i]*f
-            f *= self.factors[i].card
+            f *= G.card
         return k
 
     def op(self, g1, g2):
         t1 = self.eindex(g1)
         t2 = self.eindex(g2)
 
-        return self.indexe([self.factors[i].op(t1[i], t2[i]) for i in range(len(self.factors))])
+        return self.indexe([G.op(t1[i], t2[i]) for i, G in enumerate(self.factors)])
 
     def inverse(self, g):
         t = self.eindex(g)
-        tinv = [self.factors[i].inverse(t[i]) for i in range(len(self.factors))]
-        return self.indexe(tinv)
+        return self.indexe([G.inverse(t[i]) for i, G in enumerate(self.factors)])
 
     def order(self, g):
         t = self.eindex(g)
-        return lcm([self.factors[i].order(t[i]) for i in range(len(self.factors))])
+        return lcm([G.order(t[i]) for i,G in enumerate(self.factors)])
+
+    def derivedSubgroup(self):
+        return Direct([Subgroup(G,H = list(G.derivedSubgroup())) for G in self.factors])
 
     def isSolvable(self):
         return all(G.isSolvable() for G in self.factors)

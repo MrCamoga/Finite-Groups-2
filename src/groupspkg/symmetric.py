@@ -41,7 +41,7 @@ class Symmetric(Group):
         else:
             #TODO
             pass
-
+    
     def __lehmerinv(self, p):
         r = list(range(self.__n))
         f = self.card//self.__n

@@ -42,6 +42,19 @@ class Semidirect(Group):
         self.simple = False if H.card > 1 else G.simple
         self.id = self.indexe((G.identity(),H.identity()))
 
+        self.generators = self.__getGenerators()
+
+    def __getGenerators(self):
+        if self.G.generators is None or self.H.generators is None:
+            return
+        generators = set()
+        for i,G in enumerate([self.G,self.H]):
+            for g in G.generators:
+                e = [0,0]
+                e[i] = g
+                generators.add(self.indexe(e))
+        return generators
+
     def index(self, e):  # Recursive
         return self.G.index(e[0])+self.H.index(e[1])*self.G.card
 
