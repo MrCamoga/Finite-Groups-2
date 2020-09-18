@@ -6,12 +6,12 @@ from operations.direct import Direct
 from operations.semidirect import Semidirect
 from operations.central import CentralProduct
 from operations.quotient import Quotient
-from operations.wreath import Wreath
+from operations.wreath import Wreath, CompleteWreath
 
 from operations.inn import Inn
-from operations.aut import Aut
 from operations.aut2 import Aut2
 from operations.out import Out
+from operations.holomorph import Holomorph
 
 from operations.composition import Composition
 

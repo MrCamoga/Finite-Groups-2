@@ -9,7 +9,7 @@ def iter_rows(G):
         numhues = min(len(G)-1,800)
         for k in G:
             color = colorsys.hsv_to_rgb(5/6*k/numhues % 1,1,1-(k//numhues)*0.01)
-            colors[k] = [int(color[i]*255) for i in range(3)]
+            colors.append([int(color[i]*255) for i in range(3)])
     
     for i in G:
         row = [0]*3*len(G)

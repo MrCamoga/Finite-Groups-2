@@ -7,6 +7,10 @@ class Semidirect(Group):
         G,H groups
         f: H -> Aut(G) hom.
 
+        The product is defined in the following way:
+
+        (g1,h1)*(g2,h2) = (g1*f(h1)(g2),h1*h2)
+
         Example:
         G = Cyclic(3)
         H = Cyclic(4)

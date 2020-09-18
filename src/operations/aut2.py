@@ -15,7 +15,7 @@ def Aut2(G, gens = None):
     
     ordersd = G.orders(True)
     genorders = [G.order(g) for g in gens]
-
+    
     for i in range(len(gens)):
         newaut = []
         for a in aut:
@@ -81,5 +81,6 @@ def Aut2(G, gens = None):
     Aut.gens = gens
     Aut.group = G
     Aut.aut = aut
+    Aut.generators = None
     
     return Aut

@@ -15,7 +15,7 @@ def Aut(G, gens = None):
     
     ordersd = G.orders(True)
     genorders = [G.order(g) for g in gens]
-
+    print(genorders)
     for g in range(len(gens)):
         newaut = []
         for a in aut:
@@ -27,6 +27,7 @@ def Aut(G, gens = None):
                 
         del aut
         aut = newaut
+        print(len(aut))
 
     def e(k):
         return aut[k]

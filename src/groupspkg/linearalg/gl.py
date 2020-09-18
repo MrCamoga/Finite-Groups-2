@@ -19,6 +19,7 @@ class GL(Group):
         self.id = None
         self.basis = G.gens
         self.field = G.group
+        self.generators = None
 
     def __repr__(self):
         return "GL"+repr(self.__dim)

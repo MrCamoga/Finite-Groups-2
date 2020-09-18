@@ -1,4 +1,4 @@
-from group import composition
+from group import composition, functioninverse
 from groups import Symmetric, Alternating, Cyclic, Semidirect, Direct, Group, ElementaryAbelianGroup
 
 def GeneralizedSymmetric(m,n):
@@ -21,7 +21,7 @@ class GeneralizedAlternating(Group):
         self.__dim = (m,n)
         self.index = lambda e: C.index(e[0]) + A.index(e[1])*C.card
         self.element = lambda k: (C[k % C.card], A[k//C.card])
-        self.op = lambda k1, k2: C.op(k1 % C.card, C.index(composition(A[k1//C.card], C[k2 % C.card]))) + A.op(k1//C.card, k2//C.card)*C.card
+        self.op = lambda k1, k2: C.op(k1 % C.card, C.index(composition(functioninverse(A[k1//C.card]), C[k2 % C.card]))) + A.op(k1//C.card, k2//C.card)*C.card
         self.abelian = None
         self.cyclic = None
         self.simple = None
@@ -36,7 +36,7 @@ class GeneralizedAlternating(Group):
 def CompleteMonomialGroup(G,n):
     D = Direct([G]*n)
     S = Symmetric(n)
-    return Semidirect(D, S, lambda s, d: D.indexe(composition(S[s],D.eindex(d))))
+    return Semidirect(D, S, lambda s, d: D.indexe(composition(functioninverse(S[s]),D.eindex(d))))
 
 def WreathSymmetric(m,n):
     """

@@ -62,6 +62,7 @@ isIsomorphic (check cardinals, cyclic, abelian, element orders conjugacy classes
 isSimple
 
 Aut(G) (as subgroup of Sn)
+Aut, Inn, Out of direct, semidirect, central products, quotient group,...
 Sylow subgroups, normal subgroups, subgroups
 lattice of subgroups
 get set of generators
@@ -79,6 +80,8 @@ sporadic groups
 
 Methods that don't work yet:
     SL, PSL
+    Aut2
+    Holomorph: needs Aut2
 
 
 Duplicated methods/classes:
@@ -114,8 +117,8 @@ class Group:
         p = g
         order = 1
         while True:
-            t = self.op(p, g)
-            if t == g:
+            p = self.op(p, g)
+            if p == g:
                 return order
             order += 1
 
@@ -552,10 +555,12 @@ class Group:
         if self.simple != None:
             return self.simple
 
-        if isprime(self.card):
+        decomp = factorint(self.card)
+
+        if len(decomp) == 1 and list(decomp.values())[0] == 1: #isprime
             self.simple = True
             return True
-        elif self.card & 1:
+        elif self.card%2==1 or len(decomp) <= 2: # Feit-Thompson and Burnside's Theorems
             self.simple = False
             return False
 
@@ -602,6 +607,10 @@ class Group:
         from groups import Direct
         return Direct(self, H)
 
+    def __pow__(self, n):
+        from groups import Direct
+        return Direct([self]*n)
+
     def __getitem__(self, i):
         return self.element(i)
 
@@ -647,6 +656,16 @@ def composition(f, g):
     """
     return list(itemgetter(*f)(g))
 
+def testassocrand(H,n):
+    from random import randint
+    for _ in range(n):
+        a,b,c = (randint(0,H.card-1) for _ in range(3))
+        if H.op(H.op(a,b),c) != H.op(a,H.op(b,c)):
+            print("Non associative",a,b,c)
+            print(H.op(H.op(a,b),c), H.op(a,H.op(b,c)))
+            return False
+    return True
+
 class Subset():
     def __init__(self, G, H):
         e = list(H)
@@ -659,4 +678,9 @@ class Subset():
 if __name__ == "__main__":
     from groups import *
     from testraster import saveImage
+
+##    G = Cyclic(2)**3
+##    A = Aut2(G)
+##    A.generators = {128,129,130}
+##    AA = Aut2(A)
     

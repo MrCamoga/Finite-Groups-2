@@ -1,6 +1,25 @@
-from groups import Group, Direct
+from groups import Group, Direct, Semidirect
 from group import composition
+from operator import itemgetter
 
+
+def CompleteWreath(G,H):
+    """
+        Let G and H be groups, G^H the set of functions from H to G.
+        The complete wreath product is the semidirect product of |H| copies of G and H,
+        where H acts on G^H in the following way: f∈G^H, h∈H, then f_h(x) = f(xh^-1) for all x∈H,
+        (f,a)*(g,b) = (f_b*g,ab)
+
+        This group has order |G|^|H|*|H|
+    """
+    D = Direct([G]*H.card)
+
+    def act(i,k):
+        inv = H.inverse(i)
+        return D.indexe(tuple(itemgetter(*(H.op(j,inv) for j in H))(D[k])))
+        
+    return Semidirect(D,H, act)
+        
 class Wreath(Group):
     """
     Example:
@@ -11,6 +30,11 @@ class Wreath(Group):
     A = GroupAction(H,X,{1:[1,2,3,0]})    Action of H on X
 
     W = Wreath(G,A)
+
+    Let G be a group and H a group acting on a set X. The wreath product of G and H
+    is {(f,h) : f:X -> G, h∈H}
+
+    This group has order |G|^|X|*|H|
 
     """
     def __init__(self,G,Act):

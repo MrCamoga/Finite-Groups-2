@@ -3,4 +3,3 @@
 !*.py
 !.gitignore
 .vscode
-!*.png
