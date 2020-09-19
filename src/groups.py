@@ -20,7 +20,7 @@ from groupspkg.dicyclic import Dicyclic
 from groupspkg.dihedral import Dihedral
 from groupspkg.symmetric import Symmetric
 from groupspkg.alternating import Alternating
-from groupspkg.heisenberg import Heisenberg
+from groupspkg.heisenberg import Heisenberg, Extraspecial
 from groupspkg.generalizedquaternion import GeneralizedQuaternion
 from groupspkg.specialwreath import GeneralizedSymmetric, GeneralizedAlternating, WreathCyclic, WreathSymmetric, CompleteMonomialGroup, HyperOctahedralGroup
 

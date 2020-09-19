@@ -13,7 +13,7 @@ def Heisenberg(p):
     Operation of matrices:
         AB = op(B,A)
     """
-    return Semidirect(ElementaryAbelianGroup(p,2),Cyclic(p),lambda i, k: k//p*p + (k//p*i+k)%p)
+    return Extraspecial(p,1,0)
 
 def Extraspecial(p,n,s):
     """
@@ -22,4 +22,14 @@ def Extraspecial(p,n,s):
     """
     D = ElementaryAbelianGroup(p,2*n)
     # f = [D.automorphism({})]
-    pass
+
+    if n==1:
+        if s==0:
+            return Semidirect(Cyclic(p)**2,Cyclic(p), lambda c,e: e//p*p + (e//p*c+e)%p)
+        if s==1:
+            return Semidirect(Cyclic(p**2),Cyclic(p), lambda c,e: (p+1)**c*e%(p**2))
+    elif n>1:
+        if s==0:
+            # Central product of n p^3_+
+        if s==1:
+            # Central product of n-1 p^3_+ and p^3_-
