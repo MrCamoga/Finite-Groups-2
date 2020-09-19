@@ -12,7 +12,7 @@
 - Dihedral
 - Direct
 - ElementaryAbelianGroup
-- Extraspecial			WIP
+- Extraspecial
 - FalseWitness
 - GL, SL, PGL, PSL			WIP
 - GeneralizedAlternating
