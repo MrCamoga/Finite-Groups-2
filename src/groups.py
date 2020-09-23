@@ -30,3 +30,4 @@ from groupspkg.linearalg.gl import GL
 from groupspkg.linearalg.pgl import PGL
 from groupspkg.linearalg.sl import SL
 from groupspkg.linearalg.psl import PSL
+from groupspkg.linearalg.affine import AGL, ASL

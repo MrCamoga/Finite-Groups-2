@@ -10,10 +10,16 @@ def CentralProduct(A: Group, B: Group, C: list, D: list, f: list):
     """
     assert(set(C).issubset(A.center())) # TODO optimize Group.isCentral(set)
     assert(set(D).issubset(B.center()))
-    assert(len(C) == len(D) and len(C) == len(f))
+    assert(len(C) == len(D))
+
+    if type(f) == list:
+        iso = lambda g: f[g]
+    elif callable(f):
+        iso = f
+    
     # TODO verify f is an isomorphism
 
     AB = A*B
-    Z = {AB.indexe((C[g], B.inverse(D[f[g]]))) for g in C}
+    Z = {AB.indexe((C[g], B.inverse(D[iso(g)]))) for g in C}
 
     return AB/Z

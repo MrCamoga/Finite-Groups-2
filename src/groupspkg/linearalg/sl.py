@@ -1,14 +1,12 @@
-from groups import Group, GL
+from groups import Group, GL, Cyclic
 
-class SL(Group):
-    def __init__(self, n, k):
-        G = GL(n, k).commutatorSubgroup()
-        self.__dim = (n,k)
-        self.gens = G.generators
-        self.abelian = None
-        self.cyclic = None
-        self.simple = None
-        self.id = None
+def SL(n, k):
+    G = GL(n, k).derivedSubgroup()
+    G.__dim = (n,k)
+    G.abelian = None
+    G.cyclic = None
+    G.simple = None
+    G.id = None
+    G.field = Cyclic(k)**n
 
-    def __repr__(self):
-        return "SL"+repr(self.__dim)
+    return G

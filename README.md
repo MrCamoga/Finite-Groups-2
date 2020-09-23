@@ -14,7 +14,7 @@
 - ElementaryAbelianGroup
 - Extraspecial
 - FalseWitness
-- GL, SL, PGL, PSL			WIP
+- GL, SL, PGL, PSL, AGL, ASL			WIP
 - GeneralizedAlternating
 - GeneralizedQuaternion
 - GeneralizedSymmetric
