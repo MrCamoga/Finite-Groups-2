@@ -1,6 +1,7 @@
 from functools import reduce
 from sympy import isprime, gcd, lcm, factorint
 from operator import itemgetter
+from random import randint
 
 
 """
@@ -78,7 +79,8 @@ optimize Units()
 simple groups
 sporadic groups
 
-Methods that don't work yet:
+Groups that don't work yet:
+    Subgroup
     SL, PSL
     Aut2
     Holomorph: needs Aut2
@@ -324,11 +326,13 @@ class Group:
             Commutator subgroup of subgroups H and K
             [H,K] = {h-1k-1hk : h∈H,k∈K}
         """
+        from groups import Subgroup
+        
         S = {self.identity()}
         for h in H:
             for k in K:
                 S.add(self.commutator(h,k))
-        return S
+        return Subgroup(self,H=S)
             
     def derivedSeries(self):
         S = [self]
@@ -342,8 +346,8 @@ class Group:
             C = S[-1].derivedSubgroup()
             if len(C) == len(S[-1]):
                 return S
-            S.append(Subgroup(S[-1],H=list(C)))
-
+            S.append(C)
+    
     def lowerCentralSeries(self):
         S = [self]
         from groups import Subgroup
@@ -356,10 +360,13 @@ class Group:
             C = self.commutatorSub(S[-1],self)
             if len(C) == len(S[-1]):
                 return S
-            S.append(Subgroup(S[-1],H=list(C)))
+            S.append(C)
 
     def isSolvable(self):
         if self.card < 60:
+            return True
+
+        if all(p == 1 for p in factorint(self.card).values()): # Square free order => solvable
             return True
         
         return len(self.derivedSeries()[-1]) == 1
@@ -657,7 +664,6 @@ def composition(f, g):
     return list(itemgetter(*f)(g))
 
 def testassocrand(H,n):
-    from random import randint
     for _ in range(n):
         a,b,c = (randint(0,H.card-1) for _ in range(3))
         if H.op(H.op(a,b),c) != H.op(a,H.op(b,c)):
@@ -665,6 +671,192 @@ def testassocrand(H,n):
             print(H.op(H.op(a,b),c), H.op(a,H.op(b,c)))
             return False
     return True
+
+def count_partitions(n: int) -> int:
+    if n < 0:
+        return 0
+    if n < 2:
+        return 1
+    
+    dp = [0] * (n + 1)
+    dp[0] = 1
+
+    for i in range(1, n):
+        for j in range(1, n + 1):
+            if i <= j:
+                dp[j] += dp[j - i]
+    
+    return dp[-1]+1
+
+def count_abelian_groups(n):
+    if n < 1:
+        return 0
+    if n < 4:
+        return 1
+    
+    f = factorint(n)
+    
+    count = {}
+    for i in f.values():
+        count[i] = count.get(i, 0) + 1
+
+    return reduce(lambda a,b: a*b, (count_partitions(k)**v for k,v in count.items()))
+
+def count_groups(order):
+    if order <= 0:
+        return 0
+    if order < 4:
+        return 1
+    f = factorint(order)
+
+    l = list(f.items())
+    l.sort(key=itemgetter(0))
+    
+    if len(l) == 1: # p-group
+        prime,power = l[0]
+        if power <= 2:
+            return power
+        if power == 3:
+            return 5
+        if power == 4:
+            return 14 if prime == 2 else 15
+        if power == 5:
+            if prime == 2:
+                return 51
+            if prime == 3:
+                return 67
+            return 61 + 2*prime + 2*gcd(prime-1,3) + gcd(prime-1,4)
+        return prime**((2/27)*(power**3))               # approximate
+    if len(l) == 2:
+        a,b = l[0][1],l[1][1] # exponents
+        if a==b==1:           # pq
+            return 1 if gcd(l[0][0],l[1][0]-1) == 1 else 2
+        if {a,b} == {1,2}:          #pq^2
+            p,q = l[0][0],l[1][0]
+            if a == 2:
+                p,q=q,p
+            
+            if p==2 and q&1:
+                return 5
+            if (q-1)%p == 0 and p&1:
+                return (p+9)//2
+            if p==3 and q==2:
+                return 5
+            if (q+1)%p == 0 and (p*q) & 1:
+                return 3
+            if (p-1)%(q**2)==0:        # maybe move down
+                return 5
+            if (p-1)%q == 0 and p>3: # and (p-1)%(q**2) != 0
+                return 4
+            return 2 # q != +-1 mod p and (p-1)%q
+        return "todo"
+    if len(l) == 3:
+        if all(l[i][1] == 1 for i in range(3)): # square free order
+            p,q,r = (l[i][0] for i in range(3))
+            t = ((q-1)%p == 0)*4 + ((r-1)%p == 0)*2 + ((r-1)%q == 0)
+
+            return [1,2,2,4,2,3,p+2,p+4][t]
+            
+        return "todo"
+    if all(p == 1 for p in f.values()):     # aquare free order
+        from itertools import product
+        primes = set(f.keys())
+
+        def c(p,primes):
+            count = 0
+
+            for q in primes:
+                if (q-1)%p == 0:
+                    count += 1
+            return count
+        
+        count = 0
+        for comb in product(*[[0,1]]*len(primes)): # combinations of all primes to compute divisors
+            leftprimes = {p for i,p in enumerate(primes) if comb[i]}
+            m = reduce(lambda a,b:a*b,leftprimes,1)
+            
+            prod = 1
+            for p in primes-leftprimes:
+                prod *= ((p**c(p,leftprimes)-1)/(p-1))
+
+            count += prod
+        
+        return count
+    return "todo"
+
+def count_groups2(order):
+    if order <= 0:
+        return 0
+    if order < 4:
+        return 1
+    f = factorint(order)
+
+    l = list(f.items())
+    l.sort(key=itemgetter(0))
+    
+    if len(l) == 1: # p-group
+        prime,power = l[0]
+        if power <= 2:
+            return power
+        if power == 3:
+            return 5
+        if power == 4:
+            return 14 if prime == 2 else 15
+        if power == 5:
+            if prime == 2:
+                return 51
+            if prime == 3:
+                return 67
+            return 61 + 2*prime + 2*gcd(prime-1,3) + gcd(prime-1,4)
+        return prime**((2/27)*(power**3))               # approximate
+    if len(l) == 2:
+        a,b = l[0][1],l[1][1] # exponents
+        if a==b==1:           # pq
+            return 1 if gcd(l[0][0],l[1][0]-1) == 1 else 2
+        if {a,b} == {1,2}:          #pq^2
+            p,q = l[0][0],l[1][0]
+            if a == 2:
+                p,q=q,p
+            
+            if p==2 and q&1:
+                return 5
+            if (q-1)%p == 0 and p&1:
+                return (p+9)//2
+            if p==3 and q==2:
+                return 5
+            if (q+1)%p == 0 and (p*q) & 1:
+                return 3
+            if (p-1)%(q**2)==0:        # maybe move down
+                return 5
+            if (p-1)%q == 0 and p>3: # and (p-1)%(q**2) != 0
+                return 4
+            return 2 # q != +-1 mod p and (p-1)%q
+        return "todo"
+    if all(p == 1 for p in f.values()):     # aquare free order
+        from itertools import product
+        primes = set(f.keys())
+
+        def c(p,primes):
+            count = 0
+
+            for q in primes:
+                if (q-1)%p == 0:
+                    count += 1
+            return count
+        
+        count = 0
+        for comb in product(*[[0,1]]*len(primes)): # combinations of all primes to compute divisors
+            leftprimes = {p for i,p in enumerate(primes) if comb[i]}
+            m = reduce(lambda a,b:a*b,leftprimes,1)
+            
+            prod = 1
+            for p in primes-leftprimes:
+                prod *= ((p**c(p,leftprimes)-1)/(p-1))
+
+            count += prod
+        
+        return count
+    return "todo"
 
 class Subset():
     def __init__(self, G, H):
