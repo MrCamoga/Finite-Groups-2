@@ -784,79 +784,7 @@ def count_groups(order):
         return count
     return "todo"
 
-def count_groups2(order):
-    if order <= 0:
-        return 0
-    if order < 4:
-        return 1
-    f = factorint(order)
 
-    l = list(f.items())
-    l.sort(key=itemgetter(0))
-    
-    if len(l) == 1: # p-group
-        prime,power = l[0]
-        if power <= 2:
-            return power
-        if power == 3:
-            return 5
-        if power == 4:
-            return 14 if prime == 2 else 15
-        if power == 5:
-            if prime == 2:
-                return 51
-            if prime == 3:
-                return 67
-            return 61 + 2*prime + 2*gcd(prime-1,3) + gcd(prime-1,4)
-        return prime**((2/27)*(power**3))               # approximate
-    if len(l) == 2:
-        a,b = l[0][1],l[1][1] # exponents
-        if a==b==1:           # pq
-            return 1 if gcd(l[0][0],l[1][0]-1) == 1 else 2
-        if {a,b} == {1,2}:          #pq^2
-            p,q = l[0][0],l[1][0]
-            if a == 2:
-                p,q=q,p
-            
-            if p==2 and q&1:
-                return 5
-            if (q-1)%p == 0 and p&1:
-                return (p+9)//2
-            if p==3 and q==2:
-                return 5
-            if (q+1)%p == 0 and (p*q) & 1:
-                return 3
-            if (p-1)%(q**2)==0:        # maybe move down
-                return 5
-            if (p-1)%q == 0 and p>3: # and (p-1)%(q**2) != 0
-                return 4
-            return 2 # q != +-1 mod p and (p-1)%q
-        return "todo"
-    if all(p == 1 for p in f.values()):     # aquare free order
-        from itertools import product
-        primes = set(f.keys())
-
-        def c(p,primes):
-            count = 0
-
-            for q in primes:
-                if (q-1)%p == 0:
-                    count += 1
-            return count
-        
-        count = 0
-        for comb in product(*[[0,1]]*len(primes)): # combinations of all primes to compute divisors
-            leftprimes = {p for i,p in enumerate(primes) if comb[i]}
-            m = reduce(lambda a,b:a*b,leftprimes,1)
-            
-            prod = 1
-            for p in primes-leftprimes:
-                prod *= ((p**c(p,leftprimes)-1)/(p-1))
-
-            count += prod
-        
-        return count
-    return "todo"
 
 class Subset():
     def __init__(self, G, H):
