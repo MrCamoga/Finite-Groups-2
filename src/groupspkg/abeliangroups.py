@@ -1,4 +1,4 @@
-from sympy import isprime, mod_inverse, gcd, ntheory
+from sympy import isprime, mod_inverse, gcd, ntheory, factorint
 from groups import Direct, Group
 
 class Cyclic(Group):
@@ -26,7 +26,8 @@ class Units(Group):
     This group stores all elements in a list. Units2 class is preferred for big groups
     """
     def __init__(self, n):
-        e = [k for k in range(1, n) if gcd(k, n) == 1]
+        f = factorint(n)
+        e = [k for k in range(1, n) if all(k%p!=0 for p in f.keys())]
         d = {e[i]: i for i in range(len(e))}
         self.element = lambda k: e[k]
         self.index = lambda k: d[k]
