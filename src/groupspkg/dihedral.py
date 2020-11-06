@@ -16,6 +16,7 @@ class Dihedral(Group):
         self.simple = n == 1
         self.id = 0
         self.inverse = lambda g: -g % n if g < n else g
+        self.exponent = lambda: 2*n if n&1 else n
 
     def __repr__(self):
         return "Dihedral("+str(self.__n)+")"

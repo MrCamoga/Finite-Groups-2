@@ -276,7 +276,7 @@ class Group:
             for i in range(len(powers)):
                 if powers[i] in o:
                     continue
-                o[powers[i]] = orderg//gcd(i, orderg)
+                o[powers[i]] = orderg//gcd(i+1, orderg)
                 elements.remove(powers[i])
             
         if Dict:
@@ -338,6 +338,10 @@ class Group:
         return Subgroup(self,H=S)
             
     def derivedSeries(self):
+        """
+            G_{0} = G
+            G_{i+1} = [G_{i},G_{i}] = G_{i}'
+        """
         S = [self]
         from groups import Subgroup
         if self.isAbelian():
@@ -352,6 +356,10 @@ class Group:
             S.append(C)
     
     def lowerCentralSeries(self):
+        """
+            G_{0} = G
+            G_{i+1} = [G_{i},G]
+        """
         S = [self]
         from groups import Subgroup
         if self.isAbelian():
@@ -839,6 +847,12 @@ def count_groups(order: int) -> int:
         return count
     return "todo"
 
+def count_non_abelian_groups(n):
+    count = count_groups(n)
+    if count == "todo":
+        return "todo"
+    else:
+        return count-count_abelian_groups(n)
 
 
 class Subset():

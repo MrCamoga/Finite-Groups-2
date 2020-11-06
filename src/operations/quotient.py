@@ -1,7 +1,12 @@
 from groups import Group
 
 class Quotient(Group):
+
     def __init__(self, G, N):
+        if isinstance(G,Quotient):
+            N = set().union(*(G[k] for k in N))
+            G = G.G
+        
         assert(G.isNormal(N))
         self.card = G.card//len(N)
         self.indices = {g:0 for g in N}
@@ -21,11 +26,13 @@ class Quotient(Group):
                 self.reprs.append(i)
 
         self.index = lambda e: self.getCosetIndex(e.pop())
-        self.element = lambda k: {G[g] for g in self.getCoset(k)}
+        self.element = lambda k: frozenset(G[g] for g in self.getCoset(k))
         self.op = lambda g, h: self.getCosetIndex(G.op(self.reprs[g], self.reprs[h]))
         self.generators = self.__genGenerators()
 
     def __genGenerators(self):
+        if self.G.generators is None:
+            return
         gens = set()
         for g in self.G.generators:
             if g in self.N:

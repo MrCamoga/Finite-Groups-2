@@ -6,7 +6,7 @@ class Direct(Group):
     """
         two ways to call this class:
             1st: Direct(G1,G2,...,Gn)
-            2nd: Direct([G1,G2,...,Gn])    i.e.   Direct([Cyclic(3)]*4)
+            2nd: Direct([G1,G2,...,Gn])    e.g.   Direct([Cyclic(3)]*4)
     """
     def __init__(self, *groups):
         if isinstance(groups[0], list):
@@ -65,6 +65,9 @@ class Direct(Group):
         t2 = self.eindex(g2)
 
         return self.indexe([G.op(t1[i], t2[i]) for i, G in enumerate(self.factors)])
+
+    def exponent(self):
+        return lcm(list(G.exponent() for G in self.factors))
 
     def inverse(self, g):
         t = self.eindex(g)

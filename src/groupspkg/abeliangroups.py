@@ -14,6 +14,7 @@ class Cyclic(Group):
         self.id = 0
         self.inverse = lambda g: -g % n
         self.order = lambda g: self.card//gcd(self.card,g)
+        self.exponent = lambda: n
 
     def __repr__(self):
         return "Cyclic("+str(self.card)+")"
