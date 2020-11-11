@@ -1,5 +1,5 @@
 from group import Group
-from homomorphism import Homomorphism
+from homomorphism import Homomorphism, Morphism
 from subgroup import Subgroup
 
 from operations.direct import Direct
@@ -31,3 +31,6 @@ from groupspkg.linearalg.pgl import PGL
 from groupspkg.linearalg.sl import SL
 from groupspkg.linearalg.psl import PSL
 from groupspkg.linearalg.affine import AGL, ASL
+
+
+from groupspkg.rubik import Rubik222, Rubik333

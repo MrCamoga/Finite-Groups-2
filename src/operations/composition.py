@@ -20,3 +20,9 @@ class Composition(Homomorphism):
     
     def __getitem__(self,k):
         return self._g[self._f[k]]
+
+    def image(self):
+        return {self._g(i) for i in self._f.image()}
+
+    def kernel(self):
+        return {k for k in self._f.kernel() if self._g(k)==self.codomain().identity()}

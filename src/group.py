@@ -354,14 +354,30 @@ class Group:
             if len(C) == len(S[-1]):
                 return S
             S.append(C)
+
+    def upperCentralSeries(self):
+        """
+            Z^{0}(G) = {e}
+            Z^{i+1}(G) = π^{-1}(Z(G/Z^{i}(G)))    where π is the natural projection G -> G/Z^{i}(G)
+        """
+        if self.card == 1:
+            return [{self.identity()}]
+        S = [{self.identity()},self.center()]
+        Q = self/S[-1]
+        while True:
+            Z = Q.center()
+            N = set().union(*(Q.eindex(k) for k in Z))
+            if len(N) == len(S[-1]):
+                return S
+            S += [N]
+            Q = self/N
     
-    def lowerCentralSeries(self):
+    def lowerCentralSeries(self): # FIX
         """
             G_{0} = G
             G_{i+1} = [G_{i},G]
         """
-        S = [self]
-        from groups import Subgroup
+        S = [set(self)]
         if self.isAbelian():
             if self.card > 1:
                 return S + [Subgroup(self,H=[self.identity()])]
@@ -396,17 +412,21 @@ class Group:
 
     def nilpotencyClass(self) -> int:
         """
-            length of the lower central series
+            Nilpotency class of the group
+            Returns -1 if not nilpotent
         """
-        return len(self.lowerCentralSeries())-1
+        s = self.upperCentralSeries()
+        if len(s[-1])==self.card:
+            return len(s)-1
+        return -1
 
     def isNilpotent(self) -> bool:
         """
-            Lower central series end in the trivial subgroup
+            Upper central series end in the whole subgroup
         """
         if self.isPGroup():
             return True
-        return len(self.lowerCentralSeries()[-1]) == 1
+        return len(self.upperCentralSeries()[-1]) == self.card
 
     def isPGroup(self) -> bool:
         return len(factorint(self.card)) == 1
@@ -761,7 +781,7 @@ def count_groups(order: int) -> int:
             return 2455 + 707*p + 170*p**2 + 44*p**3 + 12*p**4 + 3*p**5 + (291+44*p+4*p**2)*gcd(p-1,3) + (135+19*p+p**2)*gcd(p-1,4) + (31+3*p)*gcd(p-1,5) + 4*gcd(p-1,7) + 5*gcd(p-1,8) + gcd(p-1,9)
         if power < 11 and p == 2:
             return [56092,10494213,49487365422][power-8]
-        return p**(2/27*(power**3))               # approximate
+        return -1
     if len(l) == 2:
         a,b = l[0][1],l[1][1] # exponents
         if a==b==1:           # pq
@@ -790,13 +810,13 @@ def count_groups(order: int) -> int:
             if q==3:
                 return 5 + 14*w(p-1,3) + 2*w(p+1,3)
             return 5 + (q**2+13*q+36)/6*w(p-1,q) + (p+5)*w(q-1,p) + 2/3*w(q-1,3)*w(p-1,q) + w((p+1)*(p**2+p+1),q) + w(p+1,q) + 2*w(q-1,p**2) + w(q-1,p**3)
-        if {a,b} == {2}:            # p^2q^2, p < q
+        if a==b==2:            # p^2q^2, p < q
             p,q = l[0][0],l[1][0]
             if p==2:
                 return 14 if q==3 else 12+4*w(q-1,4)
             return 4 + (p**2+p+4)/2*w(q-1,p**2) + (p+6)*w(q-1,p) + 2*w(q+1,p) + w(q+1,p**2)
             
-        return "todo"
+        return -1
     if len(l) == 3:
         p,q,r = (l[i][0] for i in range(3))
         if all(l[i][1] == 1 for i in range(3)): # square free order
@@ -822,7 +842,7 @@ def count_groups(order: int) -> int:
                    w(p**2-1,q*r) + 2*w(r-1,p*q) + w(r-1,p)*w(p-1,q) + w(r-1,p**2*q) + \
                    w(r-1,p)*w(q-1,p) + 2*w(q-1,p) + 3*w(p-1,q) + 2*w(r-1,p) + \
                    2*w(r-1,q) + w(r-1,p**2) + w(q-1,p**2) + w(p+1,r) + w(p+1,q)
-        return "todo"
+        return -1
     if all(p == 1 for p in f.values()):     # aquare free order, Hölder's formula
         from itertools import product
         primes = set(f.keys())
@@ -845,12 +865,12 @@ def count_groups(order: int) -> int:
             count += prod
         
         return count
-    return "todo"
+    return -1
 
 def count_non_abelian_groups(n):
     count = count_groups(n)
-    if count == "todo":
-        return "todo"
+    if count == -1:
+        return -1
     else:
         return count-count_abelian_groups(n)
 

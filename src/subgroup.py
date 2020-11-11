@@ -1,10 +1,14 @@
 from groups import Group
+from operator import itemgetter
 
 class Subgroup(Group):
     """
         Define subgroup by generators or by set of elements
     """
     def __init__(self, G, gens = None, H = None):
+        if isinstance(G,Subgroup):
+            H = list(itemgetter(*H)(G._H)) if len(H)>1 else [G._H[list(H)[0]]]
+            G = G.G
         if H is None:
             H = self.__genSubgroup(G, gens)
         self.card = len(H)
@@ -13,15 +17,15 @@ class Subgroup(Group):
         H.sort()
         self._H = H
         d = {H[i]: i for i in range(len(H))}
-        self.element = lambda k: G[k]
+        self.element = lambda k: G[H[k]]
         self.index = lambda e: d[e]
-        self.op = lambda a, b: G.op(a,b)
-        self.inverse = G.inverse
+        self.op = lambda a, b: d[G.op(H[a],H[b])]
+        self.inverse = lambda g: d[G.inverse(H[g])]
         self.abelian = None
         self.cyclic = None
         self.simple = None
-        self.id = G.identity()
-        self.generators = gens
+        self.id = d[G.identity()]
+        self.generators = [d[gen] for gen in gens] if gens is not None else None
         self.G = G
 
     def __genSubgroup(self, G, gens):
@@ -58,7 +62,7 @@ class SubgroupIter():
 
     def __next__(self):
         if self.index < len(self.H):
-            g = self.H[self.index]
+##            g = self.H[self.index]
             self.index += 1
-            return g
+            return self.index-1
         raise StopIteration()
